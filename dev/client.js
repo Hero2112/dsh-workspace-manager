@@ -39,6 +39,8 @@ window.__ModuleLoader__.load({
     /** 整体缩放三档：--wm-k 乘到所有尺寸上，所以字号、行高、图标一起变。中档比旧的 13px 略大。 */
     const SCALES = { sm: 0.9, md: 1.08, lg: 1.38 };
     const SCALE_KEYS = ['sm', 'md', 'lg'];
+    /** 三档按钮上显示的文字对应的文案键。 */
+    const SCALE_LABEL_KEYS = { sm: 'scaleSmall', md: 'scaleMedium', lg: 'scaleLarge' };
     /** 左栏宽度的基准值（未乘缩放系数），可以左右拖动，双击复位到这个值。 */
     const NAV_WIDTH_DEFAULT = 224;
     const NAV_WIDTH_MIN = 170;
@@ -341,6 +343,14 @@ window.__ModuleLoader__.load({
       '.wm-mhead-col-right{flex:none;width:calc(158px * var(--wm-k));text-align:right}',
       '.wm-manage-name{font-weight:500;max-width:calc(220px * var(--wm-k))}',
       '.wm-select-parent{max-width:calc(140px * var(--wm-k))}',
+      // 界面大小三段按钮：三个档位同时可见，点一下就切
+      '.wm-scale{display:inline-flex;flex:none;align-items:center;overflow:hidden;',
+      'border:.5px solid var(--dsw-alias-border-l2);border-radius:calc(6px * var(--wm-k))}',
+      '.wm-scalebtn{border:0;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;',
+      'font-size:calc(11px * var(--wm-k));height:calc(22px * var(--wm-k));padding:0 calc(8px * var(--wm-k));cursor:pointer}',
+      '.wm-scalebtn:hover{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}',
+      '.wm-scalebtn-active{background:var(--dsw-alias-brand-primary);color:#fff}',
+      '.wm-scalebtn-active:hover{background:var(--dsw-alias-brand-primary);color:#fff}',
       '.wm-totals{display:flex;gap:calc(12px * var(--wm-k));font-size:calc(11px * var(--wm-k));',
       'color:var(--dsw-alias-label-secondary)}',
     ].join('');
@@ -2160,15 +2170,19 @@ window.__ModuleLoader__.load({
               h('option', { value: 'title' }, t('sortTitle')),
               h('option', { value: 'created' }, t('sortCreated'))) : null,
               h('span', { className: 'wm-grow' }),
-              // 界面大小三档：改的是 --wm-k，字号/行高/按钮一起缩放
-              h('select', {
-                className: 'wm-select', value: scaleKey,
-                title: t('scaleLabel'), 'aria-label': t('scaleLabel'),
-                onChange: (event) => setPrefs({ scale: normalizeScale(event.target.value) }),
+              // 界面大小三档：三个档位同时可见，点一下就切；改的是 --wm-k，字号/行高/按钮一起缩放
+              h('div', {
+                className: 'wm-scale',
+                role: 'group',
+                'aria-label': t('scaleLabel'),
+                title: t('scaleLabel'),
               },
-              h('option', { value: 'sm' }, t('scaleSmall')),
-              h('option', { value: 'md' }, t('scaleMedium')),
-              h('option', { value: 'lg' }, t('scaleLarge'))),
+              SCALE_KEYS.map((key) => h('button', {
+                className: 'wm-scalebtn' + (key === scaleKey ? ' wm-scalebtn-active' : ''),
+                type: 'button', key,
+                'aria-pressed': key === scaleKey,
+                onClick: () => setPrefs({ scale: key }),
+              }, t(SCALE_LABEL_KEYS[key])))),
               h('span', { className: 'wm-totals' },
                 h('span', null, projects.length + ' ' + t('countProjects')),
                 h('span', null, (activeView ? activeView.folders.length : 0) + ' ' + t('countFolders')),
