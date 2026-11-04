@@ -36,6 +36,15 @@ window.__ModuleLoader__.load({
     const FOLDER_ICONS = ['📁', '📊', '🎬', '📝', '🧪', '💰', '🛒', '🎯', '🧩', '🗂️', '⚙️', '🔥'];
     const NO_TRANSLATE = () => '';
 
+    /** 整体缩放三档：--wm-k 乘到所有尺寸上，所以字号、行高、图标一起变。中档比旧的 13px 略大。 */
+    const SCALES = { sm: 0.9, md: 1.08, lg: 1.38 };
+    const SCALE_KEYS = ['sm', 'md', 'lg'];
+    /** 左栏宽度的基准值（未乘缩放系数），可以左右拖动，双击复位到这个值。 */
+    const NAV_WIDTH_DEFAULT = 224;
+    const NAV_WIDTH_MIN = 170;
+    const NAV_WIDTH_MAX = 620;
+    const NAV_KEY_STEP = 16;
+
     // ------------------------------------------------------------- 多语言文案
 
     const ZH = {
@@ -89,6 +98,11 @@ window.__ModuleLoader__.load({
       sortRecent: '最近活动',
       sortTitle: '按名称',
       sortCreated: '按创建时间',
+      scaleLabel: '界面大小',
+      scaleSmall: '小',
+      scaleMedium: '中',
+      scaleLarge: '大',
+      splitHint: '左右拖动调整左栏宽度（双击复位）',
       selected: '已选',
       assignTo: '批量归类到',
       clearSelection: '取消选择',
@@ -169,6 +183,11 @@ window.__ModuleLoader__.load({
       sortRecent: 'Recent activity',
       sortTitle: 'Name',
       sortCreated: 'Created time',
+      scaleLabel: 'Interface size',
+      scaleSmall: 'Small',
+      scaleMedium: 'Medium',
+      scaleLarge: 'Large',
+      splitHint: 'Drag sideways to resize the left column (double-click to reset)',
       selected: 'selected',
       assignTo: 'File selected into',
       clearSelection: 'Clear selection',
@@ -201,95 +220,129 @@ window.__ModuleLoader__.load({
     // ---------------------------------------------------------------- 样式
 
     const CSS = [
-      '.wm-root{box-sizing:border-box;height:100%;min-height:0;display:flex;flex-direction:column;',
-      'background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.45}',
+      // --wm-k 是整体缩放系数（大/中/小三档），所有尺寸都乘它，所以字号、行高、按钮尺寸一起变
+      '.wm-root{box-sizing:border-box;height:100%;min-height:0;display:flex;flex-direction:column;--wm-k:1;',
+      'background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:calc(13px * var(--wm-k));line-height:1.45}',
       '.wm-body{display:flex;flex:1 1 auto;min-height:0}',
-      '.wm-nav{box-sizing:border-box;flex:none;width:224px;min-height:0;overflow:auto;padding:14px 10px 18px;',
-      'border-right:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}',
+      '.wm-nav{box-sizing:border-box;flex:none;width:calc(224px * var(--wm-k));min-height:0;overflow:auto;',
+      'padding:calc(14px * var(--wm-k)) calc(10px * var(--wm-k)) calc(18px * var(--wm-k));',
+      'background:var(--dsw-alias-bg-layer-1)}',
+      '.wm-split{flex:none;width:6px;cursor:col-resize;position:relative;z-index:3;background:transparent;',
+      'border-left:.5px solid var(--dsw-alias-border-l1);transition:background .12s}',
+      '.wm-split:hover,.wm-split-active{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 32%, transparent)}',
+      '.wm-split:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
       '.wm-mainpane{box-sizing:border-box;flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column}',
-      '.wm-scroll{box-sizing:border-box;flex:1 1 auto;min-height:0;overflow:auto;padding:4px 16px 24px}',
-      '.wm-head{display:flex;align-items:flex-start;gap:10px;padding:16px 18px 8px;flex:none}',
+      '.wm-scroll{box-sizing:border-box;flex:1 1 auto;min-height:0;overflow:auto;',
+      'padding:calc(4px * var(--wm-k)) calc(16px * var(--wm-k)) calc(24px * var(--wm-k))}',
+      '.wm-head{display:flex;align-items:flex-start;gap:calc(10px * var(--wm-k));',
+      'padding:calc(16px * var(--wm-k)) calc(18px * var(--wm-k)) calc(8px * var(--wm-k));flex:none}',
       '.wm-grow{flex:1 1 auto;min-width:0}',
-      '.wm-title{margin:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.wm-sub{margin:3px 0 0;font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.wm-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:none;padding:0 18px 8px}',
-      '.wm-btn{display:inline-flex;align-items:center;gap:5px;height:27px;padding:0 9px;border-radius:6px;',
+      '.wm-title{margin:0;font-size:calc(15px * var(--wm-k));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.wm-sub{margin:calc(3px * var(--wm-k)) 0 0;font-size:calc(12px * var(--wm-k));color:var(--dsw-alias-label-secondary);',
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.wm-toolbar{display:flex;align-items:center;gap:calc(6px * var(--wm-k));flex-wrap:wrap;flex:none;',
+      'padding:0 calc(18px * var(--wm-k)) calc(8px * var(--wm-k))}',
+      '.wm-btn{display:inline-flex;align-items:center;gap:calc(5px * var(--wm-k));height:calc(27px * var(--wm-k));',
+      'padding:0 calc(9px * var(--wm-k));border-radius:calc(6px * var(--wm-k));',
       'border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);',
-      'color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}',
+      'color:var(--dsw-alias-label-primary);font:inherit;font-size:calc(12px * var(--wm-k));cursor:pointer;white-space:nowrap}',
       '.wm-btn:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}',
       '.wm-btn:disabled{opacity:.5;cursor:default}',
       '.wm-btn-primary{background:var(--dsw-alias-brand-primary);border-color:transparent;color:#fff}',
       '.wm-btn-primary:hover:not(:disabled){filter:brightness(1.06);background:var(--dsw-alias-brand-primary)}',
-      '.wm-btn-sm{height:24px;padding:0 7px;font-size:11px}',
-      '.wm-input{box-sizing:border-box;height:27px;padding:0 8px;border-radius:6px;',
+      '.wm-btn-sm{height:calc(24px * var(--wm-k));padding:0 calc(7px * var(--wm-k));font-size:calc(11px * var(--wm-k))}',
+      '.wm-input{box-sizing:border-box;height:calc(27px * var(--wm-k));padding:0 calc(8px * var(--wm-k));',
+      'border-radius:calc(6px * var(--wm-k));',
       'border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);',
-      'color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;outline:none}',
+      'color:var(--dsw-alias-label-primary);font:inherit;font-size:calc(12px * var(--wm-k));outline:none}',
       '.wm-input:focus{border-color:var(--dsw-alias-brand-primary)}',
-      '.wm-search{width:100%;margin-bottom:8px}',
-      '.wm-navit{display:flex;align-items:center;gap:7px;height:29px;padding:0 8px;border-radius:6px;cursor:pointer;',
-      'color:var(--dsw-alias-label-primary);background:transparent;border:0;width:100%;font:inherit;font-size:12.5px;text-align:left}',
+      '.wm-search{width:100%;margin-bottom:calc(8px * var(--wm-k))}',
+      '.wm-navit{display:flex;align-items:center;gap:calc(7px * var(--wm-k));height:calc(29px * var(--wm-k));',
+      'padding:0 calc(8px * var(--wm-k));border-radius:calc(6px * var(--wm-k));cursor:pointer;',
+      'color:var(--dsw-alias-label-primary);background:transparent;border:0;width:100%;',
+      'font:inherit;font-size:calc(12.5px * var(--wm-k));text-align:left}',
       '.wm-navit:hover{background:var(--dsw-alias-bg-layer-2)}',
       '.wm-navit-active{background:var(--dsw-alias-bg-layer-2);box-shadow:inset 2px 0 0 var(--dsw-alias-brand-primary)}',
       '.wm-navname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.wm-navcount{margin-left:auto;flex:none;font-size:11px;color:var(--dsw-alias-label-secondary)}',
-      '.wm-card{border:.5px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-layer-1);overflow:hidden}',
-      '.wm-row{display:flex;align-items:center;gap:6px;min-height:30px;padding:0 8px;position:relative}',
+      '.wm-navcount{margin-left:auto;flex:none;font-size:calc(11px * var(--wm-k));color:var(--dsw-alias-label-secondary)}',
+      '.wm-card{border:.5px solid var(--dsw-alias-border-l1);border-radius:calc(8px * var(--wm-k));',
+      'background:var(--dsw-alias-bg-layer-1);overflow:hidden}',
+      '.wm-row{display:flex;align-items:center;gap:calc(6px * var(--wm-k));min-height:calc(30px * var(--wm-k));',
+      'padding:0 calc(8px * var(--wm-k));position:relative}',
       '.wm-row:hover{background:var(--dsw-alias-bg-layer-2)}',
       '.wm-row-focus{box-shadow:inset 0 0 0 1px var(--dsw-alias-brand-primary)}',
       '.wm-row-hit{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 11%, transparent)}',
       '.wm-row-drop{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 20%, transparent)}',
-      '.wm-row-head{background:var(--dsw-alias-bg-layer-2);font-size:11px;color:var(--dsw-alias-label-secondary);',
-      'min-height:26px;border-bottom:.5px solid var(--dsw-alias-border-l1)}',
+      '.wm-row-head{background:var(--dsw-alias-bg-layer-2);font-size:calc(11px * var(--wm-k));color:var(--dsw-alias-label-secondary);',
+      'min-height:calc(26px * var(--wm-k));border-bottom:.5px solid var(--dsw-alias-border-l1)}',
       '.wm-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.wm-name-folder{font-weight:500}',
       '.wm-name-link{border:0;background:transparent;color:inherit;font:inherit;padding:0;',
       'text-align:left;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.wm-name-link:hover{text-decoration:underline}',
-      '.wm-menuro{display:flex;align-items:center;gap:8px;padding:3px 8px 8px;',
+      '.wm-menuro{display:flex;align-items:center;gap:calc(8px * var(--wm-k));',
+      'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k));',
       'background:var(--dsw-alias-bg-layer-2);border-bottom:.5px solid var(--dsw-alias-border-l1)}',
       '.wm-btn-danger{background:var(--dsw-alias-state-error-primary);border-color:transparent;color:#fff}',
       '.wm-btn-danger:hover:not(:disabled){filter:brightness(1.06);background:var(--dsw-alias-state-error-primary)}',
-      '.wm-meta{flex:none;font-size:11px;color:var(--dsw-alias-label-secondary);white-space:nowrap}',
-      '.wm-badge{flex:none;font-size:11px;line-height:16px;padding:0 6px;border-radius:9px;',
+      '.wm-meta{flex:none;font-size:calc(11px * var(--wm-k));color:var(--dsw-alias-label-secondary);white-space:nowrap}',
+      '.wm-badge{flex:none;font-size:calc(11px * var(--wm-k));line-height:calc(16px * var(--wm-k));',
+      'padding:0 calc(6px * var(--wm-k));border-radius:calc(9px * var(--wm-k));',
       'color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-base);border:.5px solid var(--dsw-alias-border-l1)}',
-      '.wm-chev{flex:none;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;',
-      'border:0;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0}',
+      '.wm-chev{flex:none;width:calc(16px * var(--wm-k));height:calc(16px * var(--wm-k));display:inline-flex;',
+      'align-items:center;justify-content:center;border:0;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:0}',
       '.wm-glyph{flex:none;display:inline-flex;align-items:center;color:var(--dsw-alias-label-secondary)}',
-      '.wm-dot{flex:none;width:9px;height:9px;border-radius:50%;border:.5px solid var(--dsw-alias-border-l2);cursor:pointer;padding:0;background:transparent}',
-      '.wm-emoji{flex:none;font-size:12px;line-height:1;cursor:pointer;background:transparent;border:0;padding:0}',
-      '.wm-actions{display:flex;align-items:center;gap:1px;opacity:0;transition:opacity .1s}',
+      '.wm-dot{flex:none;width:calc(9px * var(--wm-k));height:calc(9px * var(--wm-k));border-radius:50%;',
+      'border:.5px solid var(--dsw-alias-border-l2);cursor:pointer;padding:0;background:transparent}',
+      '.wm-emoji{flex:none;font-size:calc(12px * var(--wm-k));line-height:1;cursor:pointer;background:transparent;border:0;padding:0}',
+      '.wm-actions{display:flex;align-items:center;gap:calc(1px * var(--wm-k));opacity:0;transition:opacity .1s}',
       '.wm-row:hover .wm-actions{opacity:1}',
-      '.wm-ghost{display:inline-flex;align-items:center;justify-content:center;height:21px;min-width:21px;',
-      'padding:0 4px;border-radius:4px;border:0;background:transparent;cursor:pointer;',
-      'color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px}',
+      '.wm-ghost{display:inline-flex;align-items:center;justify-content:center;height:calc(21px * var(--wm-k));',
+      'min-width:calc(21px * var(--wm-k));padding:0 calc(4px * var(--wm-k));border-radius:calc(4px * var(--wm-k));',
+      'border:0;background:transparent;cursor:pointer;color:var(--dsw-alias-label-secondary);font:inherit;font-size:calc(11px * var(--wm-k))}',
       '.wm-ghost:hover{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary)}',
       '.wm-ghost-danger:hover{color:var(--dsw-alias-state-error-primary)}',
-      '.wm-select{flex:none;height:22px;max-width:132px;border-radius:5px;padding:0 3px;',
+      '.wm-select{flex:none;height:calc(22px * var(--wm-k));max-width:calc(132px * var(--wm-k));',
+      'border-radius:calc(5px * var(--wm-k));padding:0 calc(3px * var(--wm-k));',
       'border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);',
-      'color:var(--dsw-alias-label-secondary);font:inherit;font-size:11px}',
-      '.wm-check{flex:none;width:13px;height:13px;margin:0;accent-color:var(--dsw-alias-brand-primary);cursor:pointer}',
-      '.wm-chip{flex:none;font-size:10.5px;line-height:15px;padding:0 5px;border-radius:8px;',
+      'color:var(--dsw-alias-label-secondary);font:inherit;font-size:calc(11px * var(--wm-k))}',
+      '.wm-check{flex:none;width:calc(13px * var(--wm-k));height:calc(13px * var(--wm-k));margin:0;',
+      'accent-color:var(--dsw-alias-brand-primary);cursor:pointer}',
+      '.wm-chip{flex:none;font-size:calc(10.5px * var(--wm-k));line-height:calc(15px * var(--wm-k));',
+      'padding:0 calc(5px * var(--wm-k));border-radius:calc(8px * var(--wm-k));',
       'color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-base);border:.5px solid var(--dsw-alias-border-l1)}',
-      '.wm-editor{display:flex;align-items:center;gap:6px;padding:3px 8px 7px}',
-      '.wm-icons{display:flex;align-items:center;gap:2px;flex-wrap:wrap;padding:3px 8px 8px}',
-      '.wm-icons button{width:24px;height:24px;border-radius:5px;border:.5px solid transparent;background:transparent;cursor:pointer;font-size:14px}',
+      '.wm-editor{display:flex;align-items:center;gap:calc(6px * var(--wm-k));',
+      'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(7px * var(--wm-k))}',
+      '.wm-icons{display:flex;align-items:center;gap:calc(2px * var(--wm-k));flex-wrap:wrap;',
+      'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k))}',
+      '.wm-icons button{width:calc(24px * var(--wm-k));height:calc(24px * var(--wm-k));',
+      'border-radius:calc(5px * var(--wm-k));border:.5px solid transparent;background:transparent;',
+      'cursor:pointer;font-size:calc(14px * var(--wm-k))}',
       '.wm-icons button:hover{border-color:var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1)}',
-      '.wm-batch{display:flex;align-items:center;gap:8px;flex:none;padding:6px 18px;',
+      '.wm-batch{display:flex;align-items:center;gap:calc(8px * var(--wm-k));flex:none;',
+      'padding:calc(6px * var(--wm-k)) calc(18px * var(--wm-k));',
       'background:color-mix(in srgb, var(--dsw-alias-brand-primary) 9%, transparent);',
       'border-top:.5px solid var(--dsw-alias-border-l1);border-bottom:.5px solid var(--dsw-alias-border-l1)}',
-      '.wm-notice{display:flex;align-items:center;gap:8px;flex:none;margin:8px 18px 0;padding:7px 10px;border-radius:7px;font-size:12px;',
+      '.wm-notice{display:flex;align-items:center;gap:calc(8px * var(--wm-k));flex:none;',
+      'margin:calc(8px * var(--wm-k)) calc(18px * var(--wm-k)) 0;',
+      'padding:calc(7px * var(--wm-k)) calc(10px * var(--wm-k));border-radius:calc(7px * var(--wm-k));',
+      'font-size:calc(12px * var(--wm-k));',
       'background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 13%, transparent);',
       'color:var(--dsw-alias-state-warn-primary)}',
-      '.wm-empty{padding:30px 14px;text-align:center;color:var(--dsw-alias-label-secondary);font-size:12px}',
-      '.wm-hint{margin:0;padding:0 18px 14px;font-size:11px;color:var(--dsw-alias-label-secondary)}',
+      '.wm-empty{padding:calc(30px * var(--wm-k)) calc(14px * var(--wm-k));text-align:center;',
+      'color:var(--dsw-alias-label-secondary);font-size:calc(12px * var(--wm-k))}',
+      '.wm-hint{margin:0;padding:0 calc(18px * var(--wm-k)) calc(14px * var(--wm-k));',
+      'font-size:calc(11px * var(--wm-k));color:var(--dsw-alias-label-secondary)}',
       '.wm-actions-show{opacity:1}',
-      '.wm-mhead{min-height:24px;font-size:11px;color:var(--dsw-alias-label-secondary);gap:8px}',
+      '.wm-mhead{min-height:calc(24px * var(--wm-k));font-size:calc(11px * var(--wm-k));',
+      'color:var(--dsw-alias-label-secondary);gap:calc(8px * var(--wm-k))}',
       '.wm-mhead-name{min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.wm-mhead-col{flex:none;width:112px}',
-      '.wm-mhead-col-right{flex:none;width:158px;text-align:right}',
-      '.wm-manage-name{font-weight:500;max-width:220px}',
-      '.wm-select-parent{max-width:140px}',
-      '.wm-totals{display:flex;gap:12px;font-size:11px;color:var(--dsw-alias-label-secondary)}',
+      '.wm-mhead-col{flex:none;width:calc(112px * var(--wm-k))}',
+      '.wm-mhead-col-right{flex:none;width:calc(158px * var(--wm-k));text-align:right}',
+      '.wm-manage-name{font-weight:500;max-width:calc(220px * var(--wm-k))}',
+      '.wm-select-parent{max-width:calc(140px * var(--wm-k))}',
+      '.wm-totals{display:flex;gap:calc(12px * var(--wm-k));font-size:calc(11px * var(--wm-k));',
+      'color:var(--dsw-alias-label-secondary)}',
     ].join('');
 
     function StyleTag() {
@@ -302,7 +355,14 @@ window.__ModuleLoader__.load({
       return {
         version: 2,
         projects: {},
-        prefs: { sort: 'recent', activeKind: 'project', activeProjectId: '', manage: false },
+        prefs: {
+          sort: 'recent',
+          activeKind: 'project',
+          activeProjectId: '',
+          manage: false,
+          scale: 'md',
+          navWidth: NAV_WIDTH_DEFAULT,
+        },
       };
     }
 
@@ -335,6 +395,22 @@ window.__ModuleLoader__.load({
       return output;
     }
 
+    /** 只接受 sm / md / lg，其它值一律回落到中档。 */
+    function normalizeScale(value) {
+      return SCALE_KEYS.indexOf(value) >= 0 ? value : 'md';
+    }
+
+    /** 缩放系数：乘到 CSS 的 --wm-k 上。 */
+    function scaleFactorOf(scale) {
+      return SCALES[normalizeScale(scale)];
+    }
+
+    /** 左栏基准宽度：限制在可用区间内，非数字回落到默认值。 */
+    function clampNavWidth(value) {
+      const number = typeof value === 'number' && Number.isFinite(value) ? value : NAV_WIDTH_DEFAULT;
+      return Math.round(Math.min(NAV_WIDTH_MAX, Math.max(NAV_WIDTH_MIN, number)));
+    }
+
     function normalizePrefs(prefs) {
       const source = prefs && typeof prefs === 'object' ? prefs : {};
       const sort = source.sort === 'title' || source.sort === 'created' ? source.sort : 'recent';
@@ -346,6 +422,8 @@ window.__ModuleLoader__.load({
         activeKind,
         activeProjectId: typeof source.activeProjectId === 'string' ? source.activeProjectId : '',
         manage: source.manage === true,
+        scale: normalizeScale(source.scale),
+        navWidth: clampNavWidth(source.navWidth),
       };
     }
 
@@ -643,10 +721,12 @@ window.__ModuleLoader__.load({
       const [menu, setMenu] = React.useState(null);
       const [armed, setArmed] = React.useState(false);
       const [mergeFrom, setMergeFrom] = React.useState(null);
+      const [navDraft, setNavDraft] = React.useState(null);
 
       const searchRef = React.useRef(null);
       const handlerRef = React.useRef(null);
       const dragRef = React.useRef('');
+      const splitDragRef = React.useRef(null);
 
       React.useEffect(() => {
         writeStore(store);
@@ -669,6 +749,69 @@ window.__ModuleLoader__.load({
       const setPrefs = (patch) => {
         setStore((current) => ({ ...current, prefs: { ...current.prefs, ...patch } }));
       };
+
+      // 界面大小与左栏宽度：都存进 prefs，所以刷新、重启后保持
+      const scaleKey = normalizeScale(prefs.scale);
+      const scaleK = scaleFactorOf(scaleKey);
+      const navBase = clampNavWidth(prefs.navWidth);
+      const navBaseLive = navDraft === null ? navBase : navDraft;
+      const navWidthPx = Math.round(navBaseLive * scaleK);
+      const rootStyle = { '--wm-k': String(scaleK) };
+
+      /** 分栏拖拽：按下记起点，移动时按缩放系数换回基准宽度，松开才落盘（拖动过程不写存储）。 */
+      const splitDown = (event) => {
+        if (typeof event.preventDefault === 'function') event.preventDefault();
+        const startX = typeof event.clientX === 'number' ? event.clientX : 0;
+        splitDragRef.current = { startX, startBase: navBaseLive };
+        const node = event.currentTarget;
+        if (node && typeof node.setPointerCapture === 'function' && event.pointerId !== undefined) {
+          try {
+            node.setPointerCapture(event.pointerId);
+          } catch (error) {
+            /* 指针捕获不是所有环境都支持，失败也不影响拖动 */
+          }
+        }
+        setNavDraft(navBaseLive);
+      };
+
+      const splitMove = (event) => {
+        const drag = splitDragRef.current;
+        if (!drag) return;
+        const currentX = typeof event.clientX === 'number' ? event.clientX : drag.startX;
+        setNavDraft(clampNavWidth(drag.startBase + (currentX - drag.startX) / scaleK));
+      };
+
+      const splitUp = (event) => {
+        const drag = splitDragRef.current;
+        if (!drag) return;
+        splitDragRef.current = null;
+        const node = event.currentTarget;
+        if (node && typeof node.releasePointerCapture === 'function' && event.pointerId !== undefined) {
+          try {
+            node.releasePointerCapture(event.pointerId);
+          } catch (error) {
+            /* 释放失败忽略 */
+          }
+        }
+        if (navDraft !== null) setPrefs({ navWidth: clampNavWidth(navDraft) });
+        setNavDraft(null);
+      };
+
+      /** 分栏也能用键盘调：←→ 每次一格，Home 复位。事件要拦住，否则会同时触发列表导航。 */
+      const splitKey = (event) => {
+        const key = event.key;
+        if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'Home') return;
+        if (typeof event.preventDefault === 'function') event.preventDefault();
+        if (typeof event.stopPropagation === 'function') event.stopPropagation();
+        if (key === 'Home') {
+          setPrefs({ navWidth: NAV_WIDTH_DEFAULT });
+          return;
+        }
+        const step = (key === 'ArrowRight' ? NAV_KEY_STEP : -NAV_KEY_STEP) / scaleK;
+        setPrefs({ navWidth: clampNavWidth(navBaseLive + step) });
+      };
+
+      const splitReset = () => setPrefs({ navWidth: NAV_WIDTH_DEFAULT });
 
       let activeProjectId = '';
       for (const project of projects) {
@@ -1882,15 +2025,17 @@ window.__ModuleLoader__.load({
 
       for (const project of projects) {
         const isActive = viewKind === 'project' && project.workspaceId === activeProjectId;
+        const navLabel = String(project.title === undefined || project.title === '' ? t('untitledFolder') : project.title);
+        const navPath = String(project.path === undefined ? '' : project.path);
         navItems.push(h('button', {
           className: 'wm-navit' + (isActive ? ' wm-navit-active' : ''),
           type: 'button', key: 'p|' + project.workspaceId,
-          title: String(project.path === undefined ? '' : project.path),
+          // 悬停给出全名 + 磁盘路径：左栏再窄也能确认是哪个项目
+          title: navPath === '' ? navLabel : navLabel + '\n' + navPath,
           onClick: () => setPrefs({ activeKind: 'project', activeProjectId: project.workspaceId }),
         },
         h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
-        h('span', { className: 'wm-navname' },
-          String(project.title === undefined || project.title === '' ? t('untitledFolder') : project.title)),
+        h('span', { className: 'wm-navname' }, navLabel),
         h('span', { className: 'wm-navcount' }, String(asArray(project.sessionIds).length))));
       }
 
@@ -1939,15 +2084,15 @@ window.__ModuleLoader__.load({
       }
 
       if (workspaceSnapshot === undefined) {
-        return h('div', { className: 'wm-root' },
+        return h('div', { className: 'wm-root', style: rootStyle },
           h(StyleTag, null),
           h('div', { className: 'wm-empty' }, t('sub')));
       }
 
-      return h('div', { className: 'wm-root' },
+      return h('div', { className: 'wm-root', style: rootStyle },
         h(StyleTag, null),
         h('div', { className: 'wm-body' },
-          h('div', { className: 'wm-nav' },
+          h('div', { className: 'wm-nav', style: { width: navWidthPx + 'px' } },
             h('input', {
               className: 'wm-input wm-search',
               value: query,
@@ -1962,6 +2107,20 @@ window.__ModuleLoader__.load({
               style: { width: '100%', justifyContent: 'center', marginBottom: 6 },
             }, t('addProject')),
             navItems),
+          h('div', {
+            className: 'wm-split' + (navDraft === null ? '' : ' wm-split-active'),
+            role: 'separator',
+            'aria-orientation': 'vertical',
+            'aria-label': t('splitHint'),
+            title: t('splitHint'),
+            tabIndex: 0,
+            onPointerDown: splitDown,
+            onPointerMove: splitMove,
+            onPointerUp: splitUp,
+            onPointerCancel: splitUp,
+            onDoubleClick: splitReset,
+            onKeyDown: splitKey,
+          }),
           h('div', { className: 'wm-mainpane' },
             h('div', { className: 'wm-head' },
               h('div', { className: 'wm-grow' },
@@ -2001,6 +2160,15 @@ window.__ModuleLoader__.load({
               h('option', { value: 'title' }, t('sortTitle')),
               h('option', { value: 'created' }, t('sortCreated'))) : null,
               h('span', { className: 'wm-grow' }),
+              // 界面大小三档：改的是 --wm-k，字号/行高/按钮一起缩放
+              h('select', {
+                className: 'wm-select', value: scaleKey,
+                title: t('scaleLabel'), 'aria-label': t('scaleLabel'),
+                onChange: (event) => setPrefs({ scale: normalizeScale(event.target.value) }),
+              },
+              h('option', { value: 'sm' }, t('scaleSmall')),
+              h('option', { value: 'md' }, t('scaleMedium')),
+              h('option', { value: 'lg' }, t('scaleLarge'))),
               h('span', { className: 'wm-totals' },
                 h('span', null, projects.length + ' ' + t('countProjects')),
                 h('span', null, (activeView ? activeView.folders.length : 0) + ' ' + t('countFolders')),
