@@ -120,6 +120,7 @@ DeepSeek Harness Web UI 插件：把每个 **项目（= Harness 工作区）** �
 - **注释一律用中文**（2026-11-04 起）：代码标识符保持英文，`//` 与 `/** */` 里的说明、分区标题全部写中文，方便直接读仓库。
 - **尺寸必须写 `calc(Npx * var(--wm-k))`**（1.3.0 起）：`--wm-k` 是界面缩放系数，不乘它的固定像素在「大」档下不会跟着变。只有 `.5px` 边框、焦点环这类线条粗细故意保持固定。改完可以跑一遍静态检查，确认没有漏网的 `px`。
 - 纯 Client 半实现，无构建步骤：`client.js` 用 `window.__ModuleLoader__.load` 注册，`index.js` 是空的 Host 半。
+- 验证脚本在 `../tests/`（在 `dev/` 外面，所以不进分发包）：`node tests/run.cjs dev/client.js` 跑 55 项渲染冒烟断言；`node tests/check-css.cjs dev/client.js` 检查缩放有没有漏改的固定像素。
 - 源码公开在 GitHub：[Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)。
 - 只往官方插槽里**新增**条目：`sidebar.panellist`（入口图标）+ `main`（面板，key 与图标 id 相同）。
 - 样式只用主题 token（`--dsw-alias-*`），文件夹颜色为数据驱动的装饰色。

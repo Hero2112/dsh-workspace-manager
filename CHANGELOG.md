@@ -18,7 +18,7 @@
 |---|---|---|---|
 | 1.3.1 | `releases/v1.3.1/`（**当前安装**） | `dist/workspace-manager-1.3.1.zip`（30,317 B，SHA256 `841EF9E3…2A9E`） | [versions/v1.3.1.md](versions/v1.3.1.md) |
 | 1.3.0 | `releases/v1.3.0/`（可回滚） | `dist/workspace-manager-1.3.0.zip`（30,001 B，SHA256 `E78B1A13…A3F3`） | [versions/v1.3.0.md](versions/v1.3.0.md) |
-| 1.2.0 | `releases/v1.2.0/`（可回滚） | `dist/workspace-manager-1.2.0.zip`（26,842 B，SHA256 `87F443DC…99A5D7`） | [versions/v1.2.0.md](versions/v1.2.0.md) |
+| 1.2.0 | `releases/v1.2.0/`（可回滚） | `dist/workspace-manager-1.2.0.zip`（26,809 B，SHA256 `0E065B9D…DF20C`） | [versions/v1.2.0.md](versions/v1.2.0.md) |
 | 1.1.0 | `releases/v1.1.0/`（可回滚） | `dist/workspace-manager-1.1.0.zip`（23,158 B，SHA256 `CAB36C62…6E67`） | [versions/v1.1.0.md](versions/v1.1.0.md) |
 | 1.0.0 | **已丢失**（被 1.1.0 覆盖，未及时冻结） | 无 | [versions/v1.0.0.md](versions/v1.0.0.md) |
 
