@@ -244,6 +244,34 @@ check('左栏第一项叫「待归类」', navLabels.some((label) => label.index
 check('左栏第二项叫「归档区」', navLabels.some((label) => label.indexOf('归档区') === 0), JSON.stringify(navLabels));
 check('不再出现「收件箱」', navLabels.every((label) => label.indexOf('收件箱') < 0), JSON.stringify(navLabels));
 
+// 分类行：点分类名 / 数字都能收起或展开里面的对话
+const inNode = (node, predicate) => {
+  const hits = [];
+  walk(node, (n) => { if (predicate(n)) hits.push(n); });
+  return hits;
+};
+const folderRowOf = (id) => findAll((node) => node.props && node.props.key === 'f|ws1|' + id)[0];
+const sessionRowsOf = (title) => findAll((node) => node.props && typeof node.props.className === 'string'
+  && node.props.className.split(' ').indexOf('wm-row') >= 0 && textOf(node).indexOf(title) >= 0);
+check('分类里能看到它下面的对话', sessionRowsOf('开题报告').length === 1, JSON.stringify(rowsNow().map(textOf)));
+const nameToggle = inNode(folderRowOf('fA'), (n) => n.props
+  && String(n.props.className || '').indexOf('wm-name-toggle') >= 0)[0];
+check('分类名是可点的展开开关', Boolean(nameToggle));
+click(nameToggle);
+render();
+check('收起后看不到里面的对话', sessionRowsOf('开题报告').length === 0);
+click(nameToggle);
+render();
+check('再点一下又展开了', sessionRowsOf('开题报告').length === 1);
+const countBadge = inNode(folderRowOf('fA'), (n) => n.props
+  && String(n.props.className || '').indexOf('wm-badge-btn') >= 0)[0];
+check('数字徽标也可点', Boolean(countBadge));
+click(countBadge);
+render();
+check('点数字也能收起', sessionRowsOf('开题报告').length === 0);
+click(countBadge);
+render();
+
 clickText('管理分类');
 render();
 check('manage preference stored', storeOf().prefs.manage === true);
@@ -391,6 +419,19 @@ check('double click resets the width', storeOf().prefs.navWidth === 224, String(
 check('nav item tooltip carries the full path', findAll((node) => node.props
   && String(node.props.className || '').indexOf('wm-navit') >= 0
   && typeof node.props.title === 'string' && node.props.title.indexOf('\n') >= 0).length >= 1);
+
+// ---- 分类管理里的「查看」：跳回对话视图并展开该分类
+clickText('管理分类');
+render();
+const viewBtn = inNode(manageRow('fA'), (n) => n.props
+  && n.props.title === '查看这个分类里的对话' && typeof n.props.onClick === 'function')[0];
+check('管理表里有「查看」按钮', Boolean(viewBtn));
+click(viewBtn);
+render();
+check('查看后切回对话视图', storeOf().prefs.manage === false);
+check('查看后落在该分类那一行', findAll((node) => node.props
+  && node.props['data-nav-key'] === 'f|ws1|fA').length === 1);
+check('查看后该分类是展开的', sessionRowsOf('开题报告').length === 1);
 
 
 // ---- legacy v1 store still migrates (fresh mount)

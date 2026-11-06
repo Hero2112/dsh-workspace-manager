@@ -101,6 +101,8 @@ window.__ModuleLoader__.load({
       sortRecent: '最近活动',
       sortTitle: '按名称',
       sortCreated: '按创建时间',
+      view: '查看',
+      viewHint: '查看这个分类里的对话',
       scaleLabel: '界面大小',
       scaleSmall: '小',
       scaleMedium: '中',
@@ -118,7 +120,7 @@ window.__ModuleLoader__.load({
       manage: '管理分类',
       manageBack: '回到对话',
       manageTitle: '分类管理',
-      manageHint: '集中管理这个项目下的所有分类：改名、换上级、调顺序、合并、清理空分类。',
+      manageHint: '集中管理这个项目下的所有分类：改名、换上级、调顺序、合并、清理空分类；点「查看」看分类里的对话。',
       colName: '分类',
       colParent: '上级',
       colCount: '对话',
@@ -186,6 +188,8 @@ window.__ModuleLoader__.load({
       sortRecent: 'Recent activity',
       sortTitle: 'Name',
       sortCreated: 'Created time',
+      view: 'View',
+      viewHint: 'Show the conversations in this folder',
       scaleLabel: 'Interface size',
       scaleSmall: 'Small',
       scaleMedium: 'Medium',
@@ -203,7 +207,7 @@ window.__ModuleLoader__.load({
       manage: 'Manage folders',
       manageBack: 'Back to conversations',
       manageTitle: 'Folder management',
-      manageHint: 'Manage every folder in this project: rename, re-parent, reorder, merge, clean empty ones.',
+      manageHint: 'Manage every folder in this project: rename, re-parent, reorder, merge, clean empty ones; click View to see its conversations.',
       colName: 'Folder',
       colParent: 'Parent',
       colCount: 'Chats',
@@ -374,6 +378,13 @@ window.__ModuleLoader__.load({
       '.wm-scalebtn-active:hover{background:color-mix(in srgb, var(--wm-accent) 26%, transparent);color:var(--wm-accent)}',
       '.wm-totals{display:flex;gap:calc(12px * var(--wm-k));font-size:calc(11px * var(--wm-k));',
       'color:var(--wm-text-dim)}',
+      '.wm-name-toggle{border:0;background:transparent;color:inherit;font:inherit;padding:0;',
+      'text-align:left;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.wm-name-toggle:hover{text-decoration:underline}',
+      '.wm-badge-btn{border:.5px solid var(--wm-line);background:var(--wm-hover);color:var(--wm-text-dim);',
+      'cursor:pointer;font:inherit;font-size:calc(11px * var(--wm-k));line-height:calc(16px * var(--wm-k));',
+      'padding:0 calc(6px * var(--wm-k));border-radius:calc(9px * var(--wm-k))}',
+      '.wm-badge-btn:hover{background:var(--wm-accent-soft);color:var(--wm-accent);border-color:var(--wm-accent-line)}',
       // 键盘焦点：统一品牌色环，暗色主题下也能看见
       '.wm-btn:focus-visible,.wm-input:focus-visible,.wm-select:focus-visible,.wm-navit:focus-visible,',
       '.wm-ghost:focus-visible,.wm-emoji:focus-visible,.wm-chev:focus-visible,.wm-dot:focus-visible{',
@@ -759,6 +770,7 @@ window.__ModuleLoader__.load({
       const [armed, setArmed] = React.useState(false);
       const [mergeFrom, setMergeFrom] = React.useState(null);
       const [navDraft, setNavDraft] = React.useState(null);
+      const [revealKey, setRevealKey] = React.useState('');
 
       const searchRef = React.useRef(null);
       const handlerRef = React.useRef(null);
@@ -768,6 +780,15 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         writeStore(store);
       }, [store]);
+
+      // 「查看」跳转后把目标行滚到视野中间（document 只在真实环境里有）
+      React.useEffect(() => {
+        if (revealKey === '') return;
+        setRevealKey('');
+        if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return;
+        const node = document.querySelector('[data-nav-key="' + revealKey + '"]');
+        if (node && typeof node.scrollIntoView === 'function') node.scrollIntoView({ block: 'center' });
+      }, [revealKey]);
 
       const workspaceSnapshot = useSource(bridge.workspaces);
       const sessionSnapshot = useSource(bridge.sessions);
@@ -1090,6 +1111,31 @@ window.__ModuleLoader__.load({
             folder.id === folderId ? { ...folder, parentId } : folder
           )),
         }));
+      };
+
+      /** 从分类管理点「查看」：切回对话视图，展开它所有上级，并选中这一行。 */
+      const revealFolder = (workspaceId, folderId) => {
+        const record = projectRecord(store, workspaceId);
+        const byId = new Map();
+        for (const folder of record.folders) byId.set(folder.id, folder);
+        const ancestors = [];
+        let cursor = byId.get(folderId);
+        let guard = 0;
+        while (cursor && cursor.parentId !== null && guard < 128) {
+          ancestors.push(cursor.parentId);
+          cursor = byId.get(cursor.parentId);
+          guard++;
+        }
+        setCollapsed((current) => {
+          const next = { ...current };
+          for (const id of ancestors) delete next[id];
+          delete next[folderId];
+          return next;
+        });
+        setPrefs({ manage: false, activeKind: 'project', activeProjectId: workspaceId });
+        const navKey = 'f|' + workspaceId + '|' + folderId;
+        setFocused(navKey);
+        setRevealKey(navKey);
       };
 
       /** 把某个分类（连同其下所有子分类）合并进另一个分类，对话一条都不丢。 */
@@ -1682,7 +1728,14 @@ window.__ModuleLoader__.load({
             },
           }, folderNameOf(folder, t)),
           folder.pinned === true ? h('span', { className: 'wm-meta' }, '📌') : null,
-          h('span', { className: 'wm-badge' }, String(row.count)),
+          h('button', {
+            className: 'wm-badge wm-badge-btn', type: 'button',
+            title: t('viewHint') + ' · ' + String(row.count) + ' ' + t('countSessions'),
+            onClick: (event) => {
+              event.stopPropagation();
+              revealFolder(workspaceId, folder.id);
+            },
+          }, String(row.count)),
           h('span', { className: 'wm-grow' }),
           h('select', {
             className: 'wm-select wm-select-parent',
@@ -1694,6 +1747,13 @@ window.__ModuleLoader__.load({
           }, parentOptions),
           mergeRow,
           h('span', { className: 'wm-actions wm-actions-show' },
+            h('button', {
+              className: 'wm-ghost', type: 'button', title: t('viewHint'),
+              onClick: (event) => {
+                event.stopPropagation();
+                revealFolder(workspaceId, folder.id);
+              },
+            }, t('view')),
             h('button', {
               className: 'wm-ghost', type: 'button', title: t('siblingUp'),
               onClick: (event) => {
@@ -1756,6 +1816,7 @@ window.__ModuleLoader__.load({
             className: 'wm-row' + (dragOver === row.key ? ' wm-row-drop' : '')
               + (focused === row.key ? ' wm-row-focus' : ''),
             key: row.key,
+            'data-nav-key': row.key,
             style: indent(row.depth),
             draggable: true,
             onDragStart: (event) => startDrag(event, 'folder|' + row.project.workspaceId + '|' + folder.id),
@@ -1795,9 +1856,23 @@ window.__ModuleLoader__.load({
               setFolderMeta(row.project.workspaceId, folder.id, { color: (folder.color + 1) % PALETTE.length });
             },
           }),
-          h('span', { className: 'wm-name wm-name-folder', title: folderNameOf(folder, t) }, folderNameOf(folder, t)),
+          h('button', {
+            className: 'wm-name wm-name-folder wm-name-toggle', type: 'button',
+            title: (row.expanded ? t('collapse') : t('expand')) + ' · ' + folderNameOf(folder, t),
+            onClick: (event) => {
+              event.stopPropagation();
+              toggleExpand(folder.id);
+            },
+          }, folderNameOf(folder, t)),
           folder.pinned === true ? h('span', { className: 'wm-meta' }, '📌') : null,
-          h('span', { className: 'wm-badge' }, String(row.count)),
+          h('button', {
+            className: 'wm-badge wm-badge-btn', type: 'button',
+            title: (row.expanded ? t('collapse') : t('expand')) + ' · ' + String(row.count) + ' ' + t('countSessions'),
+            onClick: (event) => {
+              event.stopPropagation();
+              toggleExpand(folder.id);
+            },
+          }, String(row.count)),
           h('span', { className: 'wm-grow' }),
           h('span', { className: 'wm-actions' },
             h('button', {

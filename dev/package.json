@@ -1,6 +1,6 @@
 {
   "name": "@local/workspace-manager",
-  "version": "1.4.0-dev.0",
+  "version": "1.5.0-dev.0",
   "private": true,
   "type": "module",
   "description": "Organize each Workspace's conversations into custom folders, with a folder management view. (dev working copy, never installed)",
