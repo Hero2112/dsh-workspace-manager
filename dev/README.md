@@ -91,6 +91,27 @@ DeepSeek Harness Web UI 插件：把每个 **项目（= Harness 工作区）** �
 
 宽度范围 170–620px（按当前缩放折算），拖到哪就记到哪，下次打开还是这个宽度。
 
+### 主题与暗色系（1.3.2）
+
+插件**完全跟随 DSH 主题**，浅色与暗色两套都不用单独设置。做法是：所有颜色都从主题 token 派生到一层语义变量（`--wm-surface` / `--wm-text` / `--wm-accent` / `--wm-danger` / `--wm-hover` …），组件只引用语义变量，不写死颜色。
+
+1.3.2 修掉的问题（都是实测出来的，不是猜的）：
+
+| 问题 | 原因 | 现在 |
+|---|---|---|
+| 暗色下主按钮文字看不见 | 主按钮是「品牌色底 + 白字」，而**暗色主题的品牌色是近白色 `#f9fafb`** → 白字压白底，对比度 **1.05:1** | 改成「品牌色淡底 + 品牌色文字」，暗色 **9.1:1**、浅色 **13.4:1** |
+| 浅色下鼠标悬停没反馈 | 浅色主题的 `bg-layer-1` 与 `bg-layer-2` **都是 `#fff`**，用它做 hover 等于没变 | hover 改成「主文字色 × 9%」的 tint，两种主题都看得见 |
+| 次要文字发灰 | 大量文字用了主题的 secondary | 改成「主文字色 × 74%」，浅色 8.2:1、暗色 8.8:1 |
+| 提示条文字费劲 | 警告色 `amber-500` 当文字压在浅色淡底上只有约 2:1 | 正文用主文字色（浅色 16.7:1、暗色 11.1:1），警告色只留给边框 |
+| 深色下下拉列表是白底 | 原生 `<option>` 没配色 | `option` 也走 `--wm-surface` / `--wm-text` |
+| 删除按钮文字偏淡 | 危险色直接当文字只有 3.4:1 | 危险色掺主文字色（浅色变深、深色变亮），5.7:1 / 5.4:1 |
+
+真实对比度可以用脚本复核（数值来自 DSH 主题定义的真实取值）：
+
+```bash
+node tests/check-theme.cjs dev/client.js
+```
+
 ## 「打开」与「归档」为什么分开
 
 打开是高频、安全的动作；归档是低频、改变列表的动作。把两者并排做成一排按钮，误点代价不小，所以拆成了两种完全不同的交互：
@@ -119,10 +140,14 @@ DeepSeek Harness Web UI 插件：把每个 **项目（= Harness 工作区）** �
 
 - **注释一律用中文**（2026-11-04 起）：代码标识符保持英文，`//` 与 `/** */` 里的说明、分区标题全部写中文，方便直接读仓库。
 - **尺寸必须写 `calc(Npx * var(--wm-k))`**（1.3.0 起）：`--wm-k` 是界面缩放系数，不乘它的固定像素在「大」档下不会跟着变。只有 `.5px` 边框、焦点环这类线条粗细故意保持固定。改完可以跑一遍静态检查，确认没有漏网的 `px`。
+- **颜色必须用语义变量 `var(--wm-*)`**（1.3.2 起）：`--wm-surface` / `--wm-text` / `--wm-text-dim` / `--wm-line` / `--wm-accent(-soft/-line)` / `--wm-danger(-soft/-line/-text)` / `--wm-warn(-soft)` / `--wm-hover`。**绝对不要写死 `#fff` 之类的颜色**：暗色主题的品牌色本身就是近白色，白字压上去等于隐形（1.3.1 的真实事故）。`tests/check-theme.cjs` 会把写死的颜色当成失败。
 - 纯 Client 半实现，无构建步骤：`client.js` 用 `window.__ModuleLoader__.load` 注册，`index.js` 是空的 Host 半。
-- 验证脚本在 `../tests/`（在 `dev/` 外面，所以不进分发包）：`node tests/run.cjs dev/client.js` 跑 55 项渲染冒烟断言；`node tests/check-css.cjs dev/client.js` 检查缩放有没有漏改的固定像素。
+- 验证脚本在 `../tests/`（在 `dev/` 外面，所以不进分发包），三条都要过：
+  - `node tests/run.cjs dev/client.js` — 55 项渲染冒烟断言
+  - `node tests/check-css.cjs dev/client.js` — 缩放有没有漏改的固定像素
+  - `node tests/check-theme.cjs dev/client.js` — 浅色/暗色两套主题的对比度（用主题真实取值算 WCAG 比值）
 - 源码公开在 GitHub：[Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)。
 - 只往官方插槽里**新增**条目：`sidebar.panellist`（入口图标）+ `main`（面板，key 与图标 id 相同）。
-- 样式只用主题 token（`--dsw-alias-*`），文件夹颜色为数据驱动的装饰色。
+- 样式只用语义变量（它们派生自主题 token `--dsw-alias-*`），文件夹颜色为数据驱动的装饰色。
 - 改完 `client.js` 后：先刷新页面；若界面仍是旧版，需完全退出并重启 DSH 以加载新的客户端模块代次。
 - **换安装路径（例如 `releases/v1.1.0` → `releases/v1.2.0`）必须完全重启 DSH**：客户端模块按代次缓存，路径一变旧代次不会自动重建，表现是图标与面板凭空消失。
