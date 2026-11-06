@@ -272,6 +272,15 @@ check('点数字也能收起', sessionRowsOf('开题报告').length === 0);
 click(countBadge);
 render();
 
+// 分类之间的分隔线：组头带 wm-row-sep（第一行除外），分类行带 wm-row-folder
+const classOf = (node) => String((node.props || {}).className || '');
+const sepRows = () => findAll((node) => classOf(node).indexOf('wm-row-sep') >= 0);
+const folderRows = () => findAll((node) => classOf(node).indexOf('wm-row-folder') >= 0);
+check('每个分类行都有单独的样式类', folderRows().length === 3, 'found=' + folderRows().length);
+check('分类之间画了分隔线', sepRows().length >= 2, 'found=' + sepRows().length);
+check('第一行不画分隔线', classOf(rowsNow()[0]).indexOf('wm-row-sep') < 0, classOf(rowsNow()[0]));
+check('分隔线只在分类行上', sepRows().every((node) => classOf(node).indexOf('wm-row-folder') >= 0));
+
 clickText('管理分类');
 render();
 check('manage preference stored', storeOf().prefs.manage === true);
@@ -282,6 +291,9 @@ check('manage lists folders', findAll((node) => node.props && typeof node.props.
   JSON.stringify(classes));
 check('manage indents children', findAll((n) => n.props && n.props.style && n.props.style.paddingLeft === 22).length >= 1);
 check('manage has clean-empty', findAll((n) => n.props && textOf(n) === '清理空分类').length >= 1);
+check('管理表里分类之间也有分隔线',
+  findAll((n) => n.props && String(n.props.className || '').indexOf('wm-row-sep') >= 0).length === 3,
+  JSON.stringify(rowsNow().map((n) => n.props.className)));
 
 // rename via name link
 const link = inManage('fA', (n) => n.props && String(n.props.className || '').indexOf('wm-name-link') >= 0)[0];

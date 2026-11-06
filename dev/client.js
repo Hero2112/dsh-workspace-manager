@@ -234,6 +234,8 @@ window.__ModuleLoader__.load({
       '--wm-surface-2:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18));',
       '--wm-line:var(--dsw-alias-border-l1,rgba(127,127,127,.30));',
       '--wm-line-2:var(--dsw-alias-border-l2,rgba(127,127,127,.46));',
+      // 分类之间那条明显的分隔线：比普通边框重，明暗两套都看得见
+      '--wm-line-strong:color-mix(in srgb, var(--wm-text) 24%, transparent);',
       '--wm-text:var(--dsw-alias-label-primary,currentColor);',
       '--wm-text-dim:color-mix(in srgb, var(--wm-text) 74%, transparent);',
       '--wm-accent:var(--dsw-alias-brand-primary,#2f6feb);',
@@ -302,6 +304,10 @@ window.__ModuleLoader__.load({
       '.wm-row-drop{background:color-mix(in srgb, var(--wm-accent) 28%, transparent);box-shadow:inset 0 0 0 1px var(--wm-accent-line)}',
       '.wm-row-head{background:var(--wm-hover);font-size:calc(11px * var(--wm-k));color:var(--wm-text-dim);',
       'min-height:calc(26px * var(--wm-k));border-bottom:.5px solid var(--wm-line)}',
+      // 每个分类是一组：组头上方一条明显的分隔线 + 留白，展开后也不会和下一个分类糊在一起
+      '.wm-row-sep{border-top:calc(1px * var(--wm-k)) solid var(--wm-line-strong);',
+      'margin-top:calc(10px * var(--wm-k))}',
+      '.wm-row-folder{background:var(--wm-hover);border-radius:calc(4px * var(--wm-k))}',
       '.wm-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
       '.wm-name-folder{font-weight:500}',
       '.wm-name-link{border:0;background:transparent;color:inherit;font:inherit;padding:0;',
@@ -1633,7 +1639,7 @@ window.__ModuleLoader__.load({
 
       const indent = (depth) => ({ paddingLeft: 8 + depth * 14 });
 
-      const renderRow = (row) => {
+      const renderRow = (row, index) => {
         if (row.kind === 'empty') {
           return h('div', { className: 'wm-empty', key: row.key },
             h('div', null, row.text),
@@ -1697,7 +1703,8 @@ window.__ModuleLoader__.load({
               '　'.repeat(entry.depth) + folderNameOf(entry.folder, t)),
           ))) : null;
           return h('div', {
-            className: 'wm-row' + (focused === row.key ? ' wm-row-focus' : ''),
+            className: 'wm-row' + (index > 0 ? ' wm-row-sep' : '')
+              + (focused === row.key ? ' wm-row-focus' : ''),
             key: row.key,
             style: indent(row.depth),
             onClick: () => setFocused(row.key),
@@ -1813,7 +1820,8 @@ window.__ModuleLoader__.load({
           const color = PALETTE[folder.color];
           const isPending = pending === folder.id;
           return h('div', {
-            className: 'wm-row' + (dragOver === row.key ? ' wm-row-drop' : '')
+            className: 'wm-row wm-row-folder' + (index > 0 ? ' wm-row-sep' : '')
+              + (dragOver === row.key ? ' wm-row-drop' : '')
               + (focused === row.key ? ' wm-row-focus' : ''),
             key: row.key,
             'data-nav-key': row.key,
@@ -2154,7 +2162,6 @@ window.__ModuleLoader__.load({
       // ---- 页面骨架 ------------------------------------------------------
 
       const rows = rowList.map(renderRow);
-
       const canEditProject = viewKind === 'project' && activeProject !== null && activeView !== null;
 
       let batchBar = null;
