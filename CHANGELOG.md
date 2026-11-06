@@ -1,9 +1,10 @@
 # workspace-manager 版本记录
 
-插件：`@local/workspace-manager` · 当前版本 **1.4.1** · 详细说明见 [`versions/`](versions/) · 源码仓库 [Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)
+插件：`@local/workspace-manager` · 当前版本 **1.5.0** · 详细说明见 [`versions/`](versions/) · 源码仓库 [Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)
 
 | 版本 | 日期 | 类型 | 一句话 |
 |---|---|---|---|
+| [1.5.0](versions/v1.5.0.md) | 2026-11-06 | 新增功能 | 分类图标从 12 个扩到约 120 个（8 组 emoji：常用/文档/数据/技术/媒体/工作/生活/标记），面板分组显示并可滚动
 | [1.4.1](versions/v1.4.1.md) | 2026-11-06 | 体验改进 | 分类之间加一条明显的分隔线 + 组头留白 + 分类行淡底：展开一个分类后，它和下一个分类依然分得清
 | [1.4.0](versions/v1.4.0.md) | 2026-11-06 | 新增功能 | 分类管理每行加「查看」：跳回对话视图、展开上级并选中该分类；点分类名或数字徽标也能收起/展开分类里的对话
 | [1.3.3](versions/v1.3.3.md) | 2026-11-06 | 文案修正 | 左栏「收件箱」改名「待归类」（英文 To sort）：它不是"新收到的消息"，而是跨项目还没分类的对话汇总 |
@@ -20,7 +21,7 @@
 
 | 版本 | 冻结快照 | 分发包 | 版本文档 |
 |---|---|---|---|
-| 1.4.1 | `releases/v1.4.1/`（**当前安装**） | `dist/workspace-manager-1.4.1.zip`（33,333 B，SHA256 `300EC17A…471967`） | [versions/v1.4.1.md](versions/v1.4.1.md) |`r`n| 1.4.0 | `releases/v1.4.0/`（可回滚） | `dist/workspace-manager-1.4.0.zip`（33,016 B，SHA256 `4ACCA241…F5FE45`） | [versions/v1.4.0.md](versions/v1.4.0.md) |
+| 1.5.0 | `releases/v1.5.0/`（**当前安装**） | `dist/workspace-manager-1.5.0.zip`（34,397 B，SHA256 `1B19097F…FC3B74`） | [versions/v1.5.0.md](versions/v1.5.0.md) |`r`n| 1.4.1 | `releases/v1.4.1/`（可回滚） | `dist/workspace-manager-1.4.1.zip`（33,333 B，SHA256 `300EC17A…471967`） | [versions/v1.4.1.md](versions/v1.4.1.md) |`r`n| 1.4.0 | `releases/v1.4.0/`（可回滚） | `dist/workspace-manager-1.4.0.zip`（33,016 B，SHA256 `4ACCA241…F5FE45`） | [versions/v1.4.0.md](versions/v1.4.0.md) |
 | 1.3.3 | `releases/v1.3.3/`（可回滚） | `dist/workspace-manager-1.3.3.zip`（32,182 B，SHA256 `C9502C26…39F093`） | [versions/v1.3.3.md](versions/v1.3.3.md) |
 | 1.3.2 | `releases/v1.3.2/`（可回滚） | `dist/workspace-manager-1.3.2.zip`（32,045 B，SHA256 `617D6E36…58B5AC`） | [versions/v1.3.2.md](versions/v1.3.2.md) |
 | 1.3.1 | `releases/v1.3.1/`（可回滚） | `dist/workspace-manager-1.3.1.zip`（30,317 B，SHA256 `841EF9E3…2A9E`） | [versions/v1.3.1.md](versions/v1.3.1.md) |

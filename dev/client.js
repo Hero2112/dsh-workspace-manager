@@ -33,7 +33,22 @@ window.__ModuleLoader__.load({
 
     /** 用户选的颜色只是装饰，所以直接写字面值，不套主题 token。 */
     const PALETTE = ['', '#8A8F98', '#1F6FEB', '#2E9E5B', '#D99A2B', '#D9534F', '#8B5CF6', '#E05A9E'];
-    const FOLDER_ICONS = ['📁', '📊', '🎬', '📝', '🧪', '💰', '🛒', '🎯', '🧩', '🗂️', '⚙️', '🔥'];
+    /**
+     * 分类图标：全部是 Unicode emoji——不用打包任何图片资源，免费可商用，任何系统都能显示。
+     * 按用途分组，省得一长串里找不着。
+     */
+    const ICON_GROUPS = [
+      { key: 'common', labelKey: 'iconGroupCommon', icons: ['📁', '🗂️', '⭐', '🔥', '✅', '❗', '📍', '🧩', '⚙️', '🗓️', '💡', '🎯'] },
+      { key: 'doc', labelKey: 'iconGroupDoc', icons: ['📄', '📝', '📑', '📚', '📖', '📓', '📒', '📔', '🗒️', '📋', '📌', '🔖', '✏️', '🖊️', '🖇️', '📎'] },
+      { key: 'data', labelKey: 'iconGroupData', icons: ['📊', '📈', '📉', '🧮', '📐', '📏', '🗃️', '🗄️', '💹', '🧾', '📆', '📅', '⏱️', '🔢', '🔍', '📦'] },
+      { key: 'tech', labelKey: 'iconGroupTech', icons: ['🖥️', '💻', '⌨️', '🖱️', '🛠️', '🔧', '🔨', '🧰', '🧪', '🧬', '🐍', '🌐', '🔌', '💾', '🛰️', '🤖'] },
+      { key: 'media', labelKey: 'iconGroupMedia', icons: ['🎬', '🎨', '🖌️', '🖼️', '🎞️', '📷', '📸', '🎵', '🎧', '🎤', '🎹', '🎮', '🕹️', '📺', '📻', '🎬'] },
+      { key: 'work', labelKey: 'iconGroupWork', icons: ['💼', '🧑‍💼', '🏢', '🏦', '💳', '💵', '💰', '🛒', '🧾', '⏳', '📤', '📥', '🤝', '📣', '🗳️', '✅'] },
+      { key: 'life', labelKey: 'iconGroupLife', icons: ['☕', '🍵', '🍎', '🌱', '🌿', '🌸', '🌞', '🌙', '⭐', '✨', '❤️', '🎁', '🏠', '✈️', '🚀', '🧭'] },
+      { key: 'mark', labelKey: 'iconGroupMark', icons: ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '⚡', '❓', '‼️', '🔔', '🔒', '🔓', '🚩'] },
+    ];
+    /** 图标总数（去掉跨组重复），给测试和文档用。 */
+    const ICON_COUNT = new Set([].concat(...ICON_GROUPS.map((group) => group.icons))).size;
     const NO_TRANSLATE = () => '';
 
     /** 整体缩放三档：--wm-k 乘到所有尺寸上，所以字号、行高、图标一起变。中档比旧的 13px 略大。 */
@@ -97,6 +112,14 @@ window.__ModuleLoader__.load({
       color: '切换颜色',
       icon: '选择图标',
       clearIcon: '清除图标',
+      iconGroupCommon: '常用',
+      iconGroupDoc: '文档',
+      iconGroupData: '数据',
+      iconGroupTech: '技术',
+      iconGroupMedia: '媒体',
+      iconGroupWork: '工作',
+      iconGroupLife: '生活',
+      iconGroupMark: '标记',
       sortLabel: '排序',
       sortRecent: '最近活动',
       sortTitle: '按名称',
@@ -184,6 +207,14 @@ window.__ModuleLoader__.load({
       color: 'Change color',
       icon: 'Pick icon',
       clearIcon: 'Clear icon',
+      iconGroupCommon: 'Common',
+      iconGroupDoc: 'Docs',
+      iconGroupData: 'Data',
+      iconGroupTech: 'Tech',
+      iconGroupMedia: 'Media',
+      iconGroupWork: 'Work',
+      iconGroupLife: 'Life',
+      iconGroupMark: 'Marks',
       sortLabel: 'Sort',
       sortRecent: 'Recent activity',
       sortTitle: 'Name',
@@ -346,8 +377,13 @@ window.__ModuleLoader__.load({
       'color:var(--wm-text-dim);background:var(--wm-hover);border:.5px solid var(--wm-line)}',
       '.wm-editor{display:flex;align-items:center;gap:calc(6px * var(--wm-k));',
       'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(7px * var(--wm-k))}',
-      '.wm-icons{display:flex;align-items:center;gap:calc(2px * var(--wm-k));flex-wrap:wrap;',
-      'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k))}',
+      '.wm-icons{display:flex;flex-direction:column;gap:calc(3px * var(--wm-k));flex:none;',
+      'padding:calc(6px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k));',
+      'max-height:calc(230px * var(--wm-k));overflow:auto}',
+      '.wm-iconrow{display:flex;align-items:flex-start;gap:calc(6px * var(--wm-k))}',
+      '.wm-iconlabel{flex:none;width:calc(30px * var(--wm-k));font-size:calc(10px * var(--wm-k));',
+      'color:var(--wm-text-dim);padding-top:calc(6px * var(--wm-k));text-align:left}',
+      '.wm-icongrid{display:flex;flex-wrap:wrap;gap:calc(1px * var(--wm-k))}',
       '.wm-icons button{width:calc(24px * var(--wm-k));height:calc(24px * var(--wm-k));',
       'border-radius:calc(5px * var(--wm-k));border:.5px solid transparent;background:transparent;',
       'cursor:pointer;font-size:calc(14px * var(--wm-k))}',
@@ -1945,23 +1981,24 @@ window.__ModuleLoader__.load({
 
         if (row.kind === 'icons') {
           const folder = row.folder;
-          const buttons = FOLDER_ICONS.map((icon) => h('button', {
-            type: 'button', key: icon, title: icon,
-            onClick: (event) => {
-              event.stopPropagation();
-              setFolderMeta(row.project.workspaceId, folder.id, { icon });
-              setIconPicker(null);
-            },
-          }, icon));
-          buttons.push(h('button', {
-            type: 'button', key: 'clear', title: t('clearIcon'),
-            onClick: (event) => {
-              event.stopPropagation();
-              setFolderMeta(row.project.workspaceId, folder.id, { icon: '' });
-              setIconPicker(null);
-            },
-          }, '∅'));
-          return h('div', { className: 'wm-icons', key: row.key, style: indent(row.depth) }, buttons);
+          const pick = (icon) => (event) => {
+            event.stopPropagation();
+            setFolderMeta(row.project.workspaceId, folder.id, { icon });
+            setIconPicker(null);
+          };
+          const groups = ICON_GROUPS.map((group) => h('div', {
+            className: 'wm-iconrow', key: group.key,
+          },
+          h('span', { className: 'wm-iconlabel' }, t(group.labelKey)),
+          h('span', { className: 'wm-icongrid' }, group.icons.map((icon) => h('button', {
+            type: 'button', key: group.key + '|' + icon, title: icon, onClick: pick(icon),
+          }, icon)))));
+          groups.push(h('div', { className: 'wm-iconrow', key: 'clear' },
+            h('span', { className: 'wm-iconlabel' }, t('clearIcon')),
+            h('span', { className: 'wm-icongrid' }, h('button', {
+              type: 'button', key: 'clear', title: t('clearIcon'), onClick: pick(''),
+            }, '∅'))));
+          return h('div', { className: 'wm-icons', key: row.key, style: indent(row.depth) }, groups);
         }
 
         if (row.kind === 'editor') {

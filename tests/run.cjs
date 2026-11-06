@@ -341,6 +341,21 @@ click(findAll((n) => n.props && n.props.title === '📝' && typeof n.props.onCli
 render();
 check('icon persisted', folderById('fC').icon === '📝', JSON.stringify(folderById('fC')));
 
+// 图标面板：分组、数量、能选新加的图标
+click(inManage('fC', (n) => n.props && n.props.title === '选择图标' && typeof n.props.onClick === 'function')[0]);
+render();
+const iconPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-icons')[0];
+const iconButtons = [];
+walk(iconPanel, (n) => { if (n.type === 'button') iconButtons.push(n); });
+check('图标数量足够多', iconButtons.length >= 100, 'found=' + iconButtons.length);
+check('图标按用途分组', /常用/.test(textOf(iconPanel)) && /文档/.test(textOf(iconPanel)) && /数据/.test(textOf(iconPanel)),
+  textOf(iconPanel).slice(0, 40));
+const rocket = iconButtons.find((n) => textOf(n) === '🚀');
+check('新加的分类图标可用', Boolean(rocket));
+click(rocket);
+render();
+check('新图标保存成功', folderById('fC').icon === '🚀', JSON.stringify(folderById('fC')));
+
 // merge 数据 into 论文二
 click(inManage('fB', (n) => n.props && n.props.title === '合并到' && typeof n.props.onClick === 'function')[0]);
 render();
