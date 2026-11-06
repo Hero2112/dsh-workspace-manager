@@ -237,6 +237,13 @@ check('panel icon renders', panelReg.component({ size: 18, active: false }) !== 
 check('tree view baseline', findAll((n) => n.props && String(n.props.className || '').indexOf('wm-name-folder') >= 0).length === 3,
   JSON.stringify(rowsNow().map(textOf)));
 
+// 左栏两项的文案：待归类 / 归档区（不再是"收件箱"）
+const navLabels = findAll((n) => n.props && typeof n.props.className === 'string'
+  && n.props.className.indexOf('wm-navit') >= 0).map(textOf);
+check('左栏第一项叫「待归类」', navLabels.some((label) => label.indexOf('待归类') === 0), JSON.stringify(navLabels));
+check('左栏第二项叫「归档区」', navLabels.some((label) => label.indexOf('归档区') === 0), JSON.stringify(navLabels));
+check('不再出现「收件箱」', navLabels.every((label) => label.indexOf('收件箱') < 0), JSON.stringify(navLabels));
+
 clickText('管理分类');
 render();
 check('manage preference stored', storeOf().prefs.manage === true);

@@ -1,9 +1,10 @@
 # workspace-manager 版本记录
 
-插件：`@local/workspace-manager` · 当前版本 **1.3.2** · 详细说明见 [`versions/`](versions/) · 源码仓库 [Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)
+插件：`@local/workspace-manager` · 当前版本 **1.3.3** · 详细说明见 [`versions/`](versions/) · 源码仓库 [Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)
 
 | 版本 | 日期 | 类型 | 一句话 |
 |---|---|---|---|
+| [1.3.3](versions/v1.3.3.md) | 2026-11-06 | 文案修正 | 左栏「收件箱」改名「待归类」（英文 To sort）：它不是"新收到的消息"，而是跨项目还没分类的对话汇总 |
 | [1.3.2](versions/v1.3.2.md) | 2026-11-06 | 缺陷修复 + 体验改进 | 修掉暗色主题下「白字压近白品牌色」导致按钮文字隐形（1.05:1）；配色全部收进语义变量，hover/徽标/提示条/下拉列表统一提升对比度 |
 | [1.3.1](versions/v1.3.1.md) | 2026-11-04 | 体验改进 | 界面大小从下拉改成三段按钮 `小|中|大`：三档同时可见、当前档高亮、一点即切 |
 | [1.3.0](versions/v1.3.0.md) | 2026-11-04 | 新增功能 + 体验改进 | 界面大小三档（小/中/大，字号与行高一起缩放）、左栏宽度可拖动并记忆、项目悬停显示全名+路径 |
@@ -17,7 +18,8 @@
 
 | 版本 | 冻结快照 | 分发包 | 版本文档 |
 |---|---|---|---|
-| 1.3.2 | `releases/v1.3.2/`（**当前安装**） | `dist/workspace-manager-1.3.2.zip`（32,045 B，SHA256 `617D6E36…58B5AC`） | [versions/v1.3.2.md](versions/v1.3.2.md) |
+| 1.3.3 | `releases/v1.3.3/`（**当前安装**） | `dist/workspace-manager-1.3.3.zip`（32,182 B，SHA256 `C9502C26…39F093`） | [versions/v1.3.3.md](versions/v1.3.3.md) |
+| 1.3.2 | `releases/v1.3.2/`（可回滚） | `dist/workspace-manager-1.3.2.zip`（32,045 B，SHA256 `617D6E36…58B5AC`） | [versions/v1.3.2.md](versions/v1.3.2.md) |
 | 1.3.1 | `releases/v1.3.1/`（可回滚） | `dist/workspace-manager-1.3.1.zip`（30,317 B，SHA256 `841EF9E3…2A9E`） | [versions/v1.3.1.md](versions/v1.3.1.md) |
 | 1.3.0 | `releases/v1.3.0/`（可回滚） | `dist/workspace-manager-1.3.0.zip`（30,001 B，SHA256 `E78B1A13…A3F3`） | [versions/v1.3.0.md](versions/v1.3.0.md) |
 | 1.2.0 | `releases/v1.2.0/`（可回滚） | `dist/workspace-manager-1.2.0.zip`（26,809 B，SHA256 `0E065B9D…DF20C`） | [versions/v1.2.0.md](versions/v1.2.0.md) |

@@ -10,7 +10,7 @@
  *  - 拖拽：对话拖进分类，分类拖进分类或拖回根目录
  *  - 批量操作：一次归类或归档多条对话
  *  - 分类的颜色与 emoji、置顶、同级排序、排序方式
- *  - 跨项目的「收件箱」，以及带恢复能力的归档列表
+ *  - 跨项目的「待归类」汇总，以及带恢复能力的归档列表
  *  - 删除分类的撤销，键盘导航与快捷键
  *  - 分类管理视图：平铺表格集中管理全部分类（改名、换上级、合并、清理空分类）
  *
@@ -68,7 +68,8 @@ window.__ModuleLoader__.load({
       restore: '恢复',
       newSession: '新建对话',
       uncategorized: '未分类',
-      inbox: '收件箱',
+      // 左栏这一项不是"新收到的对话"，而是「跨项目、还没放进任何分类」的汇总，所以不叫收件箱
+      unfiled: '待归类',
       archivedView: '归档区',
       folderName: '文件夹名称',
       confirm: '再点一次确认删除',
@@ -78,7 +79,7 @@ window.__ModuleLoader__.load({
       emptyHint: '点击「添加项目」选择磁盘目录；已有项目会自动出现在这里。',
       noMatch: '没有匹配的结果。',
       noSessions: '该项目下还没有对话。',
-      inboxEmpty: '没有未归类的对话，很整洁。',
+      unfiledEmpty: '没有待归类的对话，很整洁。',
       archivedEmpty: '还没有归档的对话。',
       moveTo: '归类到',
       back: '返回对话',
@@ -153,7 +154,7 @@ window.__ModuleLoader__.load({
       restore: 'Restore',
       newSession: 'New conversation',
       uncategorized: 'Unfiled',
-      inbox: 'Inbox',
+      unfiled: 'To sort',
       archivedView: 'Archived',
       folderName: 'Folder name',
       confirm: 'Click again to delete',
@@ -163,7 +164,7 @@ window.__ModuleLoader__.load({
       emptyHint: 'Use Add project to pick a directory; existing projects appear here.',
       noMatch: 'Nothing matches.',
       noSessions: 'No conversation in this project yet.',
-      inboxEmpty: 'Nothing unfiled — nice and tidy.',
+      unfiledEmpty: 'Nothing to sort — nice and tidy.',
       archivedEmpty: 'No archived conversation yet.',
       moveTo: 'Move to',
       back: 'Back to conversation',
@@ -1406,12 +1407,12 @@ window.__ModuleLoader__.load({
           rowList.push({ kind: 'empty', key: 'empty', text: t('empty'), hint: t('emptyHint') });
         }
       } else if (viewKind === 'unfiled') {
-        headerTitle = t('inbox');
+        headerTitle = t('unfiled');
         headerMeta = t('dropHint');
         headerCount = looseAll.length;
         for (const entry of looseAll) pushSession(entry.project, entry.session, 0, null, 'unfiled');
         if (rowList.length === 0) {
-          rowList.push({ kind: 'empty', key: 'empty', text: needle === '' ? t('inboxEmpty') : t('noMatch') });
+          rowList.push({ kind: 'empty', key: 'empty', text: needle === '' ? t('unfiledEmpty') : t('noMatch') });
         }
       } else {
         headerTitle = t('archivedView');
@@ -2047,7 +2048,7 @@ window.__ModuleLoader__.load({
         onClick: () => setPrefs({ activeKind: 'unfiled' }),
       },
       h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
-      h('span', { className: 'wm-navname' }, t('inbox')),
+      h('span', { className: 'wm-navname' }, t('unfiled')),
       h('span', { className: 'wm-navcount' }, String(looseAll.length))));
 
       navItems.push(h('button', {
