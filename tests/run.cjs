@@ -287,6 +287,22 @@ check('点数字也能收起', sessionRowsOf('开题报告').length === 0);
 click(countBadge);
 render();
 
+// 全部折叠 / 全部展开
+const toolbarBtn = (label) => findAll((n) => n.props && typeof n.props.onClick === 'function'
+  && String(n.props.className || '').indexOf('wm-btn') >= 0 && textOf(n) === label)[0];
+check('工具栏有「全部折叠」', Boolean(toolbarBtn('全部折叠')));
+check('工具栏有「全部展开」', Boolean(toolbarBtn('全部展开')));
+click(toolbarBtn('全部折叠'));
+render();
+check('全部折叠后分类里的对话都藏起来', sessionRowsOf('开题报告').length === 0
+  && sessionRowsOf('数据分析').length === 0, JSON.stringify(rowsNow().map(textOf)));
+check('全部折叠后顶层分类行还在', findAll((n) => n.props && String(n.props.className || '').indexOf('wm-row-folder') >= 0).length === 2,
+  JSON.stringify(rowsNow().map((n) => n.props.className)));
+click(toolbarBtn('全部展开'));
+render();
+check('全部展开后对话回来了', sessionRowsOf('开题报告').length === 1 && sessionRowsOf('数据分析').length === 1,
+  JSON.stringify(rowsNow().map(textOf)));
+
 // 分类之间的分隔线：组头带 wm-row-sep（第一行除外），分类行带 wm-row-folder
 const classOf = (node) => String((node.props || {}).className || '');
 const sepRows = () => findAll((node) => classOf(node).indexOf('wm-row-sep') >= 0);

@@ -128,6 +128,10 @@ window.__ModuleLoader__.load({
       sortTitle: '按名称',
       sortCreated: '按创建时间',
       view: '查看',
+      expandAll: '全部展开',
+      collapseAll: '全部折叠',
+      expandAllHint: '把这个项目的所有分类都展开',
+      collapseAllHint: '把这个项目的所有分类都折叠',
       pinPane: '固定到右侧',
       pinOn: '已固定到右侧',
       pinOffHint: '打开对话时自动把分类树挂到右侧栏；点一下取消',
@@ -230,6 +234,10 @@ window.__ModuleLoader__.load({
       sortTitle: 'Name',
       sortCreated: 'Created time',
       view: 'View',
+      expandAll: 'Expand all',
+      collapseAll: 'Collapse all',
+      expandAllHint: 'Expand every folder in this project',
+      collapseAllHint: 'Collapse every folder in this project',
       pinPane: 'Pin to right side',
       pinOn: 'Pinned to right side',
       pinOffHint: 'Keep the folder tree in the right sidebar when a conversation opens; click to turn off',
@@ -1298,6 +1306,17 @@ window.__ModuleLoader__.load({
         setCollapsed((current) => ({ ...current, [folderId]: current[folderId] !== true }));
       };
 
+      /** 全部展开：清空折叠表。 */
+      const expandAllFolders = () => setCollapsed({});
+
+      /** 全部折叠：把当前项目的每个分类都标记成折叠。 */
+      const collapseAllFolders = () => {
+        if (activeView === null) return;
+        const next = {};
+        for (const folder of activeView.folders) next[folder.id] = true;
+        setCollapsed(next);
+      };
+
       const toggleSelect = (workspaceId, sessionId) => {
         const key = workspaceId + '|' + sessionId;
         setSelection((current) => {
@@ -2257,6 +2276,14 @@ window.__ModuleLoader__.load({
           onClick: () => setPrefs({ activeKind: 'archived' }),
         }, t('archivedView') + ' ' + archivedIds.size),
         h('button', {
+          className: 'wm-panechip', type: 'button', title: t('expandAllHint'),
+          onClick: expandAllFolders,
+        }, t('expandAll')),
+        h('button', {
+          className: 'wm-panechip', type: 'button', title: t('collapseAllHint'),
+          onClick: collapseAllFolders,
+        }, t('collapseAll')),
+        h('button', {
           className: 'wm-panechip', type: 'button', title: t('openMain'),
           onClick: () => bridge.openPanel(),
         }, t('openMain'))) : null;
@@ -2379,6 +2406,14 @@ window.__ModuleLoader__.load({
               h('option', { value: 'recent' }, t('sortRecent')),
               h('option', { value: 'title' }, t('sortTitle')),
               h('option', { value: 'created' }, t('sortCreated'))) : null,
+              canEditProject && manageMode !== true ? h('button', {
+                className: 'wm-btn wm-btn-sm', type: 'button', title: t('expandAllHint'),
+                onClick: expandAllFolders,
+              }, t('expandAll')) : null,
+              canEditProject && manageMode !== true ? h('button', {
+                className: 'wm-btn wm-btn-sm', type: 'button', title: t('collapseAllHint'),
+                onClick: collapseAllFolders,
+              }, t('collapseAll')) : null,
               bridge.canPin === true ? h('button', {
                 className: 'wm-btn' + (prefs.autoPin !== false ? ' wm-btn-primary' : ''), type: 'button',
                 title: prefs.autoPin !== false ? t('pinOffHint') : t('pinHint'),
