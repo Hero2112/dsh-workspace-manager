@@ -83,7 +83,8 @@ const win = {
   removeEventListener: () => {},
 };
 
-const calls = { openSession: [], connectWorkspace: [], archiveSession: [], unarchiveSession: [], selectPanel: [], create: [] };
+const calls = { openSession: [], connectWorkspace: [], archiveSession: [], unarchiveSession: [], selectPanel: [], create: [], openRightbar: [], closeRightbar: [] };
+let paneOpenFails = true;
 const snap = (value) => ({ getSnapshot: () => value, subscribe: () => () => {} });
 const workspaceSnapshot = {
   items: [{ workspaceId: 'ws1', title: '项目一', path: 'F:\\demo', sessionIds: ['s1', 's2', 's3', 's4'] }],
@@ -112,9 +113,19 @@ const ctx = {
     unarchiveSession: async (id) => { calls.unarchiveSession.push(id); },
     pickDirectory: async () => 'F:\\picked',
   },
-  layout: { selectPanel: (id) => calls.selectPanel.push(id) },
+  layout: {
+    selectPanel: (id) => calls.selectPanel.push(id),
+    openRightbar: (track, fullscreen) => calls.openRightbar.push([track, fullscreen]),
+    closeRightbar: () => calls.closeRightbar.push(true),
+  },
   sidebarRightTabs: { register: (definition) => { paneTabTypes.push(definition); return () => {}; } },
-  sidebarRight: { openTab: (kind) => { openedPaneTabs.push(kind); return () => {}; } },
+  sidebarRight: {
+    openTab: (kind) => {
+      openedPaneTabs.push(kind);
+      if (paneOpenFails) throw new Error('sidebarRight: no session');
+      return () => {};
+    },
+  },
 };
 
 let tree = null;
@@ -513,6 +524,37 @@ if (paneReg) {
     click(mainBtn);
     check('展开到主面板走 layout.selectPanel', calls.selectPanel.indexOf('workspace-manager') >= 0, JSON.stringify(calls.selectPanel));
   }
+}
+
+// ---- 「固定到右侧」：右侧栏按会话挂，面板里先失败 → 回对话页 + 展开右栏 + 重试
+hookSlots.length = 0;
+tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
+const pinBtn = findAll((n) => n.props && typeof n.props.onClick === 'function'
+  && String(n.props.className || '').indexOf('wm-btn') >= 0 && textOf(n) === '固定到右侧')[0];
+check('主面板有「固定到右侧」按钮', Boolean(pinBtn));
+if (pinBtn) {
+  paneOpenFails = true;
+  const beforePanel = calls.selectPanel.length;
+  const beforeRightbar = calls.openRightbar.length;
+  click(pinBtn);
+  render();
+  check('没有会话时先尝试过 openTab', openedPaneTabs.indexOf('workspace-manager') >= 0, JSON.stringify(openedPaneTabs));
+  check('失败后回到对话页', calls.selectPanel.length > beforePanel && calls.selectPanel[calls.selectPanel.length - 1] === null,
+    JSON.stringify(calls.selectPanel.slice(-2)));
+  check('失败后展开右侧栏', calls.openRightbar.length > beforeRightbar, JSON.stringify(calls.openRightbar));
+  check('提示条出现', findAll((n) => n.props && textOf(n).indexOf('已回到对话页') >= 0).length >= 1);
+
+  // 有会话上下文时应当一次成功，不再回对话页
+  paneOpenFails = false;
+  tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
+  const pinBtn2 = findAll((n) => n.props && typeof n.props.onClick === 'function'
+    && String(n.props.className || '').indexOf('wm-btn') >= 0 && textOf(n) === '固定到右侧')[0];
+  const panelBefore = calls.selectPanel.length;
+  const barBefore = calls.openRightbar.length;
+  click(pinBtn2);
+  render();
+  check('有会话时直接开右栏标签', calls.selectPanel.length === panelBefore && calls.openRightbar.length === barBefore,
+    'panel+' + (calls.selectPanel.length - panelBefore) + ' bar+' + (calls.openRightbar.length - barBefore));
 }
 
 console.log('');

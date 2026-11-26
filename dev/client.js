@@ -129,7 +129,8 @@ window.__ModuleLoader__.load({
       sortCreated: '按创建时间',
       view: '查看',
       pinPane: '固定到右侧',
-      pinHint: '固定在右侧栏，打开对话也不会被关掉',
+      pinHint: '固定在右侧栏，打开对话也不会被关掉（需要先有一个打开的对话）',
+      pinNavigating: '已回到对话页并展开右侧栏；没看到就点开一个对话再试一次。',
       openMain: '展开到主面板',
       paneGuide: '在右侧栏常驻一份分类树，边聊边归类。',
       viewHint: '查看这个分类里的对话',
@@ -228,7 +229,8 @@ window.__ModuleLoader__.load({
       sortCreated: 'Created time',
       view: 'View',
       pinPane: 'Pin to right side',
-      pinHint: 'Keep it in the right sidebar so opening a conversation does not close it',
+      pinHint: 'Keep it in the right sidebar so a conversation does not close it (needs an open conversation)',
+      pinNavigating: 'Back on the conversation page with the right bar opened; if it is missing, open a conversation and try again.',
       openMain: 'Open in main panel',
       paneGuide: 'A folder tree that stays in the right sidebar while you chat.',
       viewHint: 'Show the conversations in this folder',
@@ -2368,7 +2370,10 @@ window.__ModuleLoader__.load({
               h('option', { value: 'created' }, t('sortCreated'))) : null,
               bridge.canPin === true ? h('button', {
                 className: 'wm-btn', type: 'button', title: t('pinHint'),
-                onClick: () => bridge.pin(),
+                onClick: () => {
+                  const result = bridge.pin();
+                  if (result === 'navigating') showNotice(t('pinNavigating'));
+                },
               }, t('pinPane')) : null,
               h('span', { className: 'wm-grow' }),
               // 界面大小三档：三个档位同时可见，点一下就切；改的是 --wm-k，字号/行高/按钮一起缩放
@@ -2472,12 +2477,33 @@ window.__ModuleLoader__.load({
             console.warn('[workspace-manager] cannot open the main panel', error);
           }
         },
+        // 固定到右侧：右侧栏是按「会话」挂的，管理面板里没有会话上下文，
+        // 所以先回对话页并展开右栏，稍后再让右栏落我们的标签页。
         pin: () => {
+          const place = () => {
+            try {
+              ctx.sidebarRight.openTab(PANE_KIND);
+              return true;
+            } catch (error) {
+              console.warn('[workspace-manager] cannot place the right tab yet', error);
+              return false;
+            }
+          };
+          if (place()) return 'opened';
           try {
-            ctx.sidebarRight.openTab(PANE_KIND);
+            ctx.layout.selectPanel(null);
           } catch (error) {
-            console.warn('[workspace-manager] cannot open the right pane', error);
+            console.warn('[workspace-manager] cannot leave the panel', error);
           }
+          try {
+            if (typeof ctx.layout.openRightbar === 'function') ctx.layout.openRightbar(true, false);
+          } catch (error) {
+            console.warn('[workspace-manager] cannot expand the right bar', error);
+          }
+          window.setTimeout(() => {
+            if (!place()) console.warn('[workspace-manager] right tab still unavailable: open a conversation first');
+          }, 700);
+          return 'navigating';
         },
         canPin: ctx.sidebarRight !== undefined && ctx.sidebarRight !== null
           && typeof ctx.sidebarRight.openTab === 'function',
