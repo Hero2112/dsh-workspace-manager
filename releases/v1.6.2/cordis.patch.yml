@@ -1,0 +1,3 @@
+- insert:
+    - id: workspace-manager
+      name: '@local/workspace-manager'

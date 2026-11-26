@@ -526,37 +526,44 @@ if (paneReg) {
   }
 }
 
-// ---- 「固定到右侧」：右侧栏按会话挂，面板里先失败 → 回对话页 + 展开右栏 + 重试
+// ---- 打开对话时自动挂右侧栏（autoPin 默认开）
 hookSlots.length = 0;
 tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
-const pinBtn = findAll((n) => n.props && typeof n.props.onClick === 'function'
-  && String(n.props.className || '').indexOf('wm-btn') >= 0 && textOf(n) === '固定到右侧')[0];
-check('主面板有「固定到右侧」按钮', Boolean(pinBtn));
-if (pinBtn) {
-  paneOpenFails = true;
-  const beforePanel = calls.selectPanel.length;
-  const beforeRightbar = calls.openRightbar.length;
-  click(pinBtn);
-  render();
-  check('没有会话时先尝试过 openTab', openedPaneTabs.indexOf('workspace-manager') >= 0, JSON.stringify(openedPaneTabs));
-  check('失败后回到对话页', calls.selectPanel.length > beforePanel && calls.selectPanel[calls.selectPanel.length - 1] === null,
-    JSON.stringify(calls.selectPanel.slice(-2)));
-  check('失败后展开右侧栏', calls.openRightbar.length > beforeRightbar, JSON.stringify(calls.openRightbar));
-  check('提示条出现', findAll((n) => n.props && textOf(n).indexOf('已回到对话页') >= 0).length >= 1);
+check('默认开着「自动固定到右侧」', storeOf().prefs.autoPin !== false, JSON.stringify(storeOf().prefs));
+const pinToggle = () => findAll((n) => n.props && typeof n.props.onClick === 'function'
+  && String(n.props.className || '').indexOf('wm-btn') >= 0
+  && (textOf(n) === '已固定到右侧' || textOf(n) === '固定到右侧'))[0];
+check('按钮显示「已固定到右侧」', Boolean(pinToggle()) && textOf(pinToggle()) === '已固定到右侧', textOf(pinToggle() || {}));
 
-  // 有会话上下文时应当一次成功，不再回对话页
-  paneOpenFails = false;
-  tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
-  const pinBtn2 = findAll((n) => n.props && typeof n.props.onClick === 'function'
-    && String(n.props.className || '').indexOf('wm-btn') >= 0 && textOf(n) === '固定到右侧')[0];
-  const panelBefore = calls.selectPanel.length;
-  const barBefore = calls.openRightbar.length;
-  click(pinBtn2);
-  render();
-  check('有会话时直接开右栏标签', calls.selectPanel.length === panelBefore && calls.openRightbar.length === barBefore,
-    'panel+' + (calls.selectPanel.length - panelBefore) + ' bar+' + (calls.openRightbar.length - barBefore));
-}
+// 点对话：打开对话 + 后台把标签挂到右侧栏（没有会话上下文时先失败，于是回对话页并展开右栏）
+paneOpenFails = true;
+const panelBefore = calls.selectPanel.length;
+const barBefore = calls.openRightbar.length;
+const tabsBefore = openedPaneTabs.length;
+click(sessionRowsOf('开题报告')[0] && findAll((n) => n.props && String(n.props.className || '').indexOf('wm-name-link') >= 0
+  && textOf(n) === '开题报告')[0]);
+render();
+check('点对话会尝试挂右侧栏', openedPaneTabs.length > tabsBefore && openedPaneTabs[openedPaneTabs.length - 1] === 'workspace-manager',
+  JSON.stringify(openedPaneTabs.slice(-3)));
+check('挂失败会回到对话页', calls.selectPanel.length > panelBefore && calls.selectPanel[calls.selectPanel.length - 1] === null,
+  JSON.stringify(calls.selectPanel.slice(-2)));
+check('挂失败会展开右侧栏', calls.openRightbar.length > barBefore, JSON.stringify(calls.openRightbar));
 
+// 关掉开关：再点对话就不该动右侧栏
+tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
+paneOpenFails = false;
+click(pinToggle());
+render();
+check('点一下开关就关掉自动固定', storeOf().prefs.autoPin === false, JSON.stringify(storeOf().prefs.autoPin));
+check('按钮变回「固定到右侧」', Boolean(pinToggle()) && textOf(pinToggle()) === '固定到右侧', textOf(pinToggle() || {}));
+const tabsBefore2 = openedPaneTabs.length;
+const barBefore2 = calls.openRightbar.length;
+tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
+click(findAll((n) => n.props && String(n.props.className || '').indexOf('wm-name-link') >= 0
+  && textOf(n) === '开题报告')[0]);
+render();
+check('关掉后点对话不再动右侧栏', openedPaneTabs.length === tabsBefore2 && calls.openRightbar.length === barBefore2,
+  'tabs+' + (openedPaneTabs.length - tabsBefore2) + ' bar+' + (calls.openRightbar.length - barBefore2));
 console.log('');
 console.log('passed: ' + pass + '  failed: ' + failures.length);
 for (const failure of failures) console.log('  FAIL ' + failure);

@@ -1,9 +1,10 @@
 # workspace-manager 版本记录
 
-插件：`@local/workspace-manager` · 当前版本 **1.6.1** · 详细说明见 [`versions/`](versions/) · 源码仓库 [Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)
+插件：`@local/workspace-manager` · 当前版本 **1.6.2** · 详细说明见 [`versions/`](versions/) · 源码仓库 [Hero2112/dsh-workspace-manager](https://github.com/Hero2112/dsh-workspace-manager)
 
 | 版本 | 日期 | 类型 | 一句话 |
 |---|---|---|---|
+| [1.6.2](versions/v1.6.2.md) | 2026-11-26 | 体验改进 | 点对话时分类树自动挂到右侧栏，界面不再被关掉；按钮变成开关（默认开）
 | [1.6.1](versions/v1.6.1.md) | 2026-11-26 | 缺陷修复 | 修「固定到右侧」点不动：右侧栏按会话挂，面板里没有会话上下文；改成先回对话页并展开右栏再落标签
 | [1.6.0](versions/v1.6.0.md) | 2026-11-26 | 新增功能 | 固定到右侧栏：打开对话时分类树常驻，边聊边归类
 | [1.5.0](versions/v1.5.0.md) | 2026-11-06 | 新增功能 | 分类图标从 12 个扩到约 120 个（8 组 emoji：常用/文档/数据/技术/媒体/工作/生活/标记），面板分组显示并可滚动
@@ -23,7 +24,7 @@
 
 | 版本 | 冻结快照 | 分发包 | 版本文档 |
 |---|---|---|---|
-| 1.6.1 | `releases/v1.6.1/`（**当前安装**） | `dist/workspace-manager-1.6.1.zip`（36,217 B，SHA256 `82A69035…`） | [versions/v1.6.1.md](versions/v1.6.1.md) |`r`n| 1.6.0 | `releases/v1.6.0/`（可回滚） | `dist/workspace-manager-1.6.0.zip`（35,699 B，SHA256 `089DF641…28D620`） | [versions/v1.6.0.md](versions/v1.6.0.md) |`r`n| 1.5.0 | `releases/v1.5.0/`（可回滚） | `dist/workspace-manager-1.5.0.zip`（34,397 B，SHA256 `1B19097F…FC3B74`） | [versions/v1.5.0.md](versions/v1.5.0.md) |`r`n| 1.4.1 | `releases/v1.4.1/`（可回滚） | `dist/workspace-manager-1.4.1.zip`（33,333 B，SHA256 `300EC17A…471967`） | [versions/v1.4.1.md](versions/v1.4.1.md) |`r`n| 1.4.0 | `releases/v1.4.0/`（可回滚） | `dist/workspace-manager-1.4.0.zip`（33,016 B，SHA256 `4ACCA241…F5FE45`） | [versions/v1.4.0.md](versions/v1.4.0.md) |
+| 1.6.2 | `releases/v1.6.2/`（**当前安装**） | `dist/workspace-manager-1.6.2.zip`（36,487 B，SHA256 `4D79C30B…`） | [versions/v1.6.2.md](versions/v1.6.2.md) |`r`n| 1.6.1 | `releases/v1.6.1/`（可回滚） | `dist/workspace-manager-1.6.1.zip`（36,217 B，SHA256 `82A69035…`） | [versions/v1.6.1.md](versions/v1.6.1.md) |`r`n| 1.6.0 | `releases/v1.6.0/`（可回滚） | `dist/workspace-manager-1.6.0.zip`（35,699 B，SHA256 `089DF641…28D620`） | [versions/v1.6.0.md](versions/v1.6.0.md) |`r`n| 1.5.0 | `releases/v1.5.0/`（可回滚） | `dist/workspace-manager-1.5.0.zip`（34,397 B，SHA256 `1B19097F…FC3B74`） | [versions/v1.5.0.md](versions/v1.5.0.md) |`r`n| 1.4.1 | `releases/v1.4.1/`（可回滚） | `dist/workspace-manager-1.4.1.zip`（33,333 B，SHA256 `300EC17A…471967`） | [versions/v1.4.1.md](versions/v1.4.1.md) |`r`n| 1.4.0 | `releases/v1.4.0/`（可回滚） | `dist/workspace-manager-1.4.0.zip`（33,016 B，SHA256 `4ACCA241…F5FE45`） | [versions/v1.4.0.md](versions/v1.4.0.md) |
 | 1.3.3 | `releases/v1.3.3/`（可回滚） | `dist/workspace-manager-1.3.3.zip`（32,182 B，SHA256 `C9502C26…39F093`） | [versions/v1.3.3.md](versions/v1.3.3.md) |
 | 1.3.2 | `releases/v1.3.2/`（可回滚） | `dist/workspace-manager-1.3.2.zip`（32,045 B，SHA256 `617D6E36…58B5AC`） | [versions/v1.3.2.md](versions/v1.3.2.md) |
 | 1.3.1 | `releases/v1.3.1/`（可回滚） | `dist/workspace-manager-1.3.1.zip`（30,317 B，SHA256 `841EF9E3…2A9E`） | [versions/v1.3.1.md](versions/v1.3.1.md) |

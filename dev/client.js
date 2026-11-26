@@ -129,6 +129,8 @@ window.__ModuleLoader__.load({
       sortCreated: '按创建时间',
       view: '查看',
       pinPane: '固定到右侧',
+      pinOn: '已固定到右侧',
+      pinOffHint: '打开对话时自动把分类树挂到右侧栏；点一下取消',
       pinHint: '固定在右侧栏，打开对话也不会被关掉（需要先有一个打开的对话）',
       pinNavigating: '已回到对话页并展开右侧栏；没看到就点开一个对话再试一次。',
       openMain: '展开到主面板',
@@ -229,6 +231,8 @@ window.__ModuleLoader__.load({
       sortCreated: 'Created time',
       view: 'View',
       pinPane: 'Pin to right side',
+      pinOn: 'Pinned to right side',
+      pinOffHint: 'Keep the folder tree in the right sidebar when a conversation opens; click to turn off',
       pinHint: 'Keep it in the right sidebar so a conversation does not close it (needs an open conversation)',
       pinNavigating: 'Back on the conversation page with the right bar opened; if it is missing, open a conversation and try again.',
       openMain: 'Open in main panel',
@@ -475,6 +479,7 @@ window.__ModuleLoader__.load({
           activeKind: 'project',
           activeProjectId: '',
           manage: false,
+          autoPin: true,
           scale: 'md',
           navWidth: NAV_WIDTH_DEFAULT,
         },
@@ -537,6 +542,8 @@ window.__ModuleLoader__.load({
         activeKind,
         activeProjectId: typeof source.activeProjectId === 'string' ? source.activeProjectId : '',
         manage: source.manage === true,
+        // 打开对话时自动把分类树挂到右侧栏，主区域留给对话（默认开）
+        autoPin: source.autoPin !== false,
         scale: normalizeScale(source.scale),
         navWidth: clampNavWidth(source.navWidth),
       };
@@ -1016,7 +1023,11 @@ window.__ModuleLoader__.load({
 
       // ---- 业务动作 ------------------------------------------------------
 
-      const openSession = (sessionId) => bridge.openSession(sessionId);
+      // 打开对话：主区域让给对话，同时把分类树挂到右侧栏（autoPin 关掉就不挂）
+      const openSession = (sessionId) => {
+        bridge.openSession(sessionId);
+        if (prefs.autoPin !== false && bridge.canPin === true) bridge.pin();
+      };
 
       const archiveOne = (workspaceId, sessionId) => {
         Promise.resolve(bridge.archiveSession(sessionId)).then((failure) => {
@@ -2369,12 +2380,16 @@ window.__ModuleLoader__.load({
               h('option', { value: 'title' }, t('sortTitle')),
               h('option', { value: 'created' }, t('sortCreated'))) : null,
               bridge.canPin === true ? h('button', {
-                className: 'wm-btn', type: 'button', title: t('pinHint'),
+                className: 'wm-btn' + (prefs.autoPin !== false ? ' wm-btn-primary' : ''), type: 'button',
+                title: prefs.autoPin !== false ? t('pinOffHint') : t('pinHint'),
                 onClick: () => {
+                  const next = prefs.autoPin === false;
+                  setPrefs({ autoPin: next });
+                  if (!next) return;
                   const result = bridge.pin();
                   if (result === 'navigating') showNotice(t('pinNavigating'));
                 },
-              }, t('pinPane')) : null,
+              }, prefs.autoPin !== false ? t('pinOn') : t('pinPane')) : null,
               h('span', { className: 'wm-grow' }),
               // 界面大小三档：三个档位同时可见，点一下就切；改的是 --wm-k，字号/行高/按钮一起缩放
               h('div', {
