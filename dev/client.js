@@ -27,6 +27,9 @@ window.__ModuleLoader__.load({
 
     const NS = 'workspaceManager';
     const PANEL_ID = 'workspace-manager';
+    // 右侧栏那个常驻标签页（打开对话也不会被关掉）
+    const PANE_ID = '@local/workspace-manager';
+    const PANE_KIND = 'workspace-manager';
     const STORE_KEY = 'dsh.workspace-manager.v2';
     const LEGACY_KEY = 'dsh.workspace-manager.v1';
     const UNCATEGORIZED = '__none__';
@@ -125,6 +128,10 @@ window.__ModuleLoader__.load({
       sortTitle: '按名称',
       sortCreated: '按创建时间',
       view: '查看',
+      pinPane: '固定到右侧',
+      pinHint: '固定在右侧栏，打开对话也不会被关掉',
+      openMain: '展开到主面板',
+      paneGuide: '在右侧栏常驻一份分类树，边聊边归类。',
       viewHint: '查看这个分类里的对话',
       scaleLabel: '界面大小',
       scaleSmall: '小',
@@ -220,6 +227,10 @@ window.__ModuleLoader__.load({
       sortTitle: 'Name',
       sortCreated: 'Created time',
       view: 'View',
+      pinPane: 'Pin to right side',
+      pinHint: 'Keep it in the right sidebar so opening a conversation does not close it',
+      openMain: 'Open in main panel',
+      paneGuide: 'A folder tree that stays in the right sidebar while you chat.',
       viewHint: 'Show the conversations in this folder',
       scaleLabel: 'Interface size',
       scaleSmall: 'Small',
@@ -336,6 +347,18 @@ window.__ModuleLoader__.load({
       '.wm-row-head{background:var(--wm-hover);font-size:calc(11px * var(--wm-k));color:var(--wm-text-dim);',
       'min-height:calc(26px * var(--wm-k));border-bottom:.5px solid var(--wm-line)}',
       // 每个分类是一组：组头上方一条明显的分隔线 + 留白，展开后也不会和下一个分类糊在一起
+      // 右侧栏紧凑版：没有左栏，顶部换成一行「项目下拉 + 待归类 / 归档」
+      '.wm-compact .wm-head,.wm-compact .wm-toolbar,.wm-compact .wm-nav,.wm-compact .wm-split,.wm-compact .wm-hint{display:none}',
+      '.wm-compact .wm-scroll{padding:calc(4px * var(--wm-k)) calc(8px * var(--wm-k)) calc(12px * var(--wm-k))}',
+      '.wm-panebar{display:flex;align-items:center;gap:calc(6px * var(--wm-k));flex:none;flex-wrap:wrap;',
+      'padding:calc(8px * var(--wm-k)) calc(10px * var(--wm-k));border-bottom:.5px solid var(--wm-line)}',
+      '.wm-pane-project{max-width:calc(150px * var(--wm-k))}',
+      '.wm-panechip{flex:none;border:.5px solid var(--wm-line-2);background:var(--wm-surface);color:var(--wm-text);',
+      'cursor:pointer;font:inherit;font-size:calc(11px * var(--wm-k));height:calc(22px * var(--wm-k));',
+      'padding:0 calc(7px * var(--wm-k));border-radius:calc(5px * var(--wm-k))}',
+      '.wm-panechip:hover{background:var(--wm-hover)}',
+      '.wm-panechip-active{background:var(--wm-accent-soft);color:var(--wm-accent);border-color:var(--wm-accent-line)}',
+      '.wm-pane-title{font-weight:500}',
       '.wm-row-sep{border-top:calc(1px * var(--wm-k)) solid var(--wm-line-strong);',
       'margin-top:calc(10px * var(--wm-k))}',
       '.wm-row-folder{background:var(--wm-hover);border-radius:calc(4px * var(--wm-k))}',
@@ -794,6 +817,8 @@ window.__ModuleLoader__.load({
     function PanelPage(props) {
       const t = typeof props.t === 'function' ? props.t : props.tr;
       const bridge = props.bridge;
+      // 右侧栏里的紧凑版：没有左栏，顶部换成「项目下拉 + 待归类 / 归档」一行
+      const compact = props.variant === 'pane';
 
       const [store, setStore] = React.useState(readStore);
       const [query, setQuery] = React.useState('');
@@ -844,7 +869,7 @@ window.__ModuleLoader__.load({
       const projects = asArray(workspaceSnapshot ? workspaceSnapshot.items : null);
       const prefs = store.prefs;
       const sortMode = prefs.sort;
-      const manageMode = prefs.manage === true;
+      const manageMode = compact ? false : prefs.manage === true;
 
       const setPrefs = (patch) => {
         setStore((current) => ({ ...current, prefs: { ...current.prefs, ...patch } }));
@@ -2198,6 +2223,31 @@ window.__ModuleLoader__.load({
 
       // ---- 页面骨架 ------------------------------------------------------
 
+      // 右侧栏紧凑版顶部：项目下拉 + 待归类 / 归档 + 展开到主面板
+      const paneBar = compact ? h('div', { className: 'wm-panebar' },
+        h('select', {
+          className: 'wm-select wm-pane-project',
+          value: activeProjectId,
+          title: t('title'), 'aria-label': t('title'),
+          onChange: (event) => setPrefs({ activeKind: 'project', activeProjectId: event.target.value }),
+        },
+        projects.map((project) => h('option', { value: project.workspaceId, key: project.workspaceId },
+          String(project.title === undefined || project.title === '' ? t('untitledFolder') : project.title)))),
+        h('button', {
+          className: 'wm-panechip' + (viewKind === 'unfiled' ? ' wm-panechip-active' : ''),
+          type: 'button', title: t('unfiled'),
+          onClick: () => setPrefs({ activeKind: 'unfiled' }),
+        }, t('unfiled') + ' ' + looseAll.length),
+        h('button', {
+          className: 'wm-panechip' + (viewKind === 'archived' ? ' wm-panechip-active' : ''),
+          type: 'button', title: t('archivedView'),
+          onClick: () => setPrefs({ activeKind: 'archived' }),
+        }, t('archivedView') + ' ' + archivedIds.size),
+        h('button', {
+          className: 'wm-panechip', type: 'button', title: t('openMain'),
+          onClick: () => bridge.openPanel(),
+        }, t('openMain'))) : null;
+
       const rows = rowList.map(renderRow);
       const canEditProject = viewKind === 'project' && activeProject !== null && activeView !== null;
 
@@ -2240,15 +2290,15 @@ window.__ModuleLoader__.load({
       }
 
       if (workspaceSnapshot === undefined) {
-        return h('div', { className: 'wm-root', style: rootStyle },
+        return h('div', { className: 'wm-root' + (compact ? ' wm-compact' : ''), style: rootStyle },
           h(StyleTag, null),
           h('div', { className: 'wm-empty' }, t('sub')));
       }
 
-      return h('div', { className: 'wm-root', style: rootStyle },
+      return h('div', { className: 'wm-root' + (compact ? ' wm-compact' : ''), style: rootStyle },
         h(StyleTag, null),
         h('div', { className: 'wm-body' },
-          h('div', { className: 'wm-nav', style: { width: navWidthPx + 'px' } },
+          compact ? null : h('div', { className: 'wm-nav', style: { width: navWidthPx + 'px' } },
             h('input', {
               className: 'wm-input wm-search',
               value: query,
@@ -2263,7 +2313,7 @@ window.__ModuleLoader__.load({
               style: { width: '100%', justifyContent: 'center', marginBottom: 6 },
             }, t('addProject')),
             navItems),
-          h('div', {
+          compact ? null : h('div', {
             className: 'wm-split' + (navDraft === null ? '' : ' wm-split-active'),
             role: 'separator',
             'aria-orientation': 'vertical',
@@ -2278,6 +2328,7 @@ window.__ModuleLoader__.load({
             onKeyDown: splitKey,
           }),
           h('div', { className: 'wm-mainpane' },
+            paneBar,
             h('div', { className: 'wm-head' },
               h('div', { className: 'wm-grow' },
                 h('h2', { className: 'wm-title', title: headerTitle }, headerTitle),
@@ -2315,6 +2366,10 @@ window.__ModuleLoader__.load({
               h('option', { value: 'recent' }, t('sortRecent')),
               h('option', { value: 'title' }, t('sortTitle')),
               h('option', { value: 'created' }, t('sortCreated'))) : null,
+              bridge.canPin === true ? h('button', {
+                className: 'wm-btn', type: 'button', title: t('pinHint'),
+                onClick: () => bridge.pin(),
+              }, t('pinPane')) : null,
               h('span', { className: 'wm-grow' }),
               // 界面大小三档：三个档位同时可见，点一下就切；改的是 --wm-k，字号/行高/按钮一起缩放
               h('div', {
@@ -2348,7 +2403,7 @@ window.__ModuleLoader__.load({
 
     // ------------------------------------------------------------ 生命周期
 
-    const inject = ['slots', 'locale', 'layout', 'sessions', 'workspaces', 'uiWorkspace'];
+    const inject = ['slots', 'locale', 'layout', 'sessions', 'workspaces', 'uiWorkspace', 'sidebarRight', 'sidebarRightTabs'];
 
     function apply(ctx) {
       ctx.effect(() => ctx.locale.register(NS, { zh: ZH, en: EN }), 'workspace-manager:dictionary');
@@ -2410,6 +2465,22 @@ window.__ModuleLoader__.load({
             return { error: messageOf(error) };
           }
         },
+        openPanel: () => {
+          try {
+            ctx.layout.selectPanel(PANEL_ID);
+          } catch (error) {
+            console.warn('[workspace-manager] cannot open the main panel', error);
+          }
+        },
+        pin: () => {
+          try {
+            ctx.sidebarRight.openTab(PANE_KIND);
+          } catch (error) {
+            console.warn('[workspace-manager] cannot open the right pane', error);
+          }
+        },
+        canPin: ctx.sidebarRight !== undefined && ctx.sidebarRight !== null
+          && typeof ctx.sidebarRight.openTab === 'function',
         backToConversation: () => {
           try {
             ctx.layout.selectPanel(null);
@@ -2433,6 +2504,40 @@ window.__ModuleLoader__.load({
         locale: NS,
         label: () => translate('title'),
       }, PanelIcon));
+
+      // ---- 右侧栏常驻标签页：打开对话不会被关掉
+      const paneAvailable = ctx.sidebarRightTabs !== undefined && ctx.sidebarRightTabs !== null
+        && typeof ctx.sidebarRightTabs.register === 'function';
+      if (paneAvailable) {
+        ctx.effect(() => ctx.sidebarRightTabs.register({
+          id: PANE_ID,
+          kind: PANE_KIND,
+          priority: 'extension',
+          title: () => translate('title'),
+          guide: [{
+            id: 'workspace-manager',
+            order: 5,
+            title: () => translate('title'),
+            description: () => translate('paneGuide'),
+            icon: PanelIcon,
+          }],
+        }), 'workspace-manager:pane tab type');
+
+        ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
+          name: 'sidebar.right.pane.tab',
+          key: PANE_ID,
+          locale: NS,
+        }, (paneProps) => h(PanelPage, Object.assign({}, paneProps, {
+          bridge,
+          t: translate,
+          variant: 'pane',
+        })))), 'workspace-manager:pane body');
+
+        ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab.title', () => ctx.slots.register({
+          name: 'sidebar.right.pane.tab.title',
+          key: PANE_ID,
+        }, () => h('span', { className: 'wm-pane-title' }, translate('title')))), 'workspace-manager:pane title');
+      }
     }
 
     return { inject, apply };

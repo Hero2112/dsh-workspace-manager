@@ -97,6 +97,8 @@ const sessionById = {
   s4: { id: 's4', title: '旧讨论' },
 };
 const registrations = [];
+const paneTabTypes = [];
+const openedPaneTabs = [];
 const ctx = {
   effect: (fn) => { fn(); },
   locale: { register: () => {}, getLocale: () => ({ id: 'zh-CN' }) },
@@ -111,6 +113,8 @@ const ctx = {
     pickDirectory: async () => 'F:\\picked',
   },
   layout: { selectPanel: (id) => calls.selectPanel.push(id) },
+  sidebarRightTabs: { register: (definition) => { paneTabTypes.push(definition); return () => {}; } },
+  sidebarRight: { openTab: (kind) => { openedPaneTabs.push(kind); return () => {}; } },
 };
 
 let tree = null;
@@ -475,6 +479,41 @@ check('legacy folder survives migration', findAll((node) => node.props
   JSON.stringify(rowsNow().map(textOf)));
 check('legacy prefs survive migration', JSON.parse(storage.get('dsh.workspace-manager.v2')).prefs.sort === 'title');
 check('legacy data rewritten as v2', JSON.parse(storage.get('dsh.workspace-manager.v2')).version === 2);
+
+// ---- 右侧栏常驻标签页（打开对话也不会被关掉）
+check('注册了右侧栏标签类型', paneTabTypes.some((d) => d && d.id === '@local/workspace-manager' && d.kind === 'workspace-manager'),
+  JSON.stringify(paneTabTypes.map((d) => d && d.kind)));
+const paneReg = registrations.find((entry) => entry.options.name === 'sidebar.right.pane.tab');
+check('注册了右侧栏标签内容', Boolean(paneReg), JSON.stringify(registrations.map((e) => e.options.name)));
+if (paneReg) {
+  hookSlots.length = 0;
+  const paneProps = Object.assign({}, paneReg.options.inject ? paneReg.options.inject() : {}, { sessionId: 's1' });
+  tree = expand(React.createElement(paneReg.component, paneProps));
+  const paneRoot = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-root') >= 0)[0];
+  check('右侧栏是紧凑版', classOf(paneRoot).indexOf('wm-compact') >= 0, classOf(paneRoot));
+  check('右侧栏有项目下拉', findAll((n) => n.type === 'select' && n.props && String(n.props.className || '').indexOf('wm-pane-project') >= 0).length === 1);
+  check('右侧栏有「待归类」入口', findAll((n) => n.props && String(n.props.className || '').indexOf('wm-panechip') >= 0
+    && textOf(n).indexOf('待归类') >= 0).length >= 1);
+  check('右侧栏里能看到分类和对话', findAll((n) => n.props && String(n.props.className || '').indexOf('wm-name-folder') >= 0).length >= 1
+    && sessionRowsOf('开题报告').length >= 1);
+  check('右侧栏没有左栏', findAll((n) => n.props && n.props.className === 'wm-nav').length === 0);
+  // 点对话 → 打开对话，面板不关
+  const paneLink = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-name-link') >= 0
+    && textOf(n) === '开题报告')[0];
+  check('右侧栏里对话标题可点', Boolean(paneLink));
+  if (paneLink) {
+    click(paneLink);
+    check('右侧栏点了会打开对话', calls.openSession.indexOf('s1') >= 0, JSON.stringify(calls.openSession));
+  }
+  // 展开到主面板
+  const mainBtn = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-panechip') >= 0
+    && textOf(n) === '展开到主面板')[0];
+  check('右侧栏有「展开到主面板」', Boolean(mainBtn));
+  if (mainBtn) {
+    click(mainBtn);
+    check('展开到主面板走 layout.selectPanel', calls.selectPanel.indexOf('workspace-manager') >= 0, JSON.stringify(calls.selectPanel));
+  }
+}
 
 console.log('');
 console.log('passed: ' + pass + '  failed: ' + failures.length);
