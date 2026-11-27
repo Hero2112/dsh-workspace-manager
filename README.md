@@ -2,6 +2,8 @@
 
 DeepSeek Harness Web UI 插件：把每个 **项目（= Harness 工作区）** 下的 **对话** 整理进自己建的文件夹。
 
+> **开源，MIT 许可。** 安装见 [INSTALL.md](INSTALL.md)；下载见 [Releases](https://github.com/Hero2112/dsh-workspace-manager/releases)。
+
 ## 打开方式
 
 左侧边栏底部的面板图标区，点击橙色的文件夹图标（「插件」「定时任务」之后第三个）→ 主区域打开管理页。
