@@ -414,6 +414,23 @@ click(rocket);
 render();
 check('新图标保存成功', folderById('fC').icon === '🚀', JSON.stringify(folderById('fC')));
 
+// 线性图标（Lucide）：分组、能选、能渲染成 svg
+click(inManage('fC', (n) => n.props && n.props.title === '选择图标' && typeof n.props.onClick === 'function')[0]);
+render();
+const svgPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-icons')[0];
+check('面板里有线性图标分组', /电商·线/.test(textOf(svgPanel)) && /新媒体·线/.test(textOf(svgPanel)), textOf(svgPanel).slice(0, 80));
+const svgButtons = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-svgbtn') >= 0);
+check('线性图标按钮数量够', svgButtons.length >= 70, 'found=' + svgButtons.length);
+click(svgButtons[0]);
+render();
+check('线性图标落盘', folderById('fC').icon.indexOf('svg:') === 0, JSON.stringify(folderById('fC').icon));
+const svgRow = manageRow('fC');
+check('分类行把线性图标渲染成 svg', svgRow !== undefined && (() => {
+  let found = false;
+  walk(svgRow, (n) => { if (n.type === 'svg') found = true; });
+  return found;
+})(), JSON.stringify(folderById('fC').icon));
+
 // merge 数据 into 论文二
 click(inManage('fB', (n) => n.props && n.props.title === '合并到' && typeof n.props.onClick === 'function')[0]);
 render();
