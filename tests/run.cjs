@@ -382,24 +382,24 @@ render();
 check('re-parent persisted', folderById('fC').parentId === 'fA', JSON.stringify(folderById('fC')));
 
 // reorder before pinning (pinned folders sort to the top, which would mask the swap)
-click(inManage('fC', (n) => n.props && n.props.title === '上移')[0]);
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '上移')[0]);
 render();
 check('reorder persisted', foldersOf().map((f) => f.id).indexOf('fC') < foldersOf().map((f) => f.id).indexOf('fB'),
   JSON.stringify(foldersOf().map((f) => f.id)));
 
 // pin / icon on 空分类
-click(inManage('fC', (n) => n.props && n.props.title === '置顶')[0]);
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '置顶')[0]);
 render();
 check('pin persisted', folderById('fC').pinned === true, JSON.stringify(folderById('fC')));
-click(inManage('fC', (n) => n.props && n.props.title === '选择图标' && typeof n.props.onClick === 'function')[0]);
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '选择图标' && typeof n.props.onClick === 'function')[0]);
 render();
 check('icon picker opens', findAll((n) => n.props && String(n.props.className || '') === 'wm-icons').length === 1);
-click(findAll((n) => n.props && n.props.title === '📝' && typeof n.props.onClick === 'function')[0]);
+click(findAll((n) => n.props && n.props['data-tip'] === '📝' && typeof n.props.onClick === 'function')[0]);
 render();
 check('icon persisted', folderById('fC').icon === '📝', JSON.stringify(folderById('fC')));
 
 // 图标面板：分组、数量、能选新加的图标
-click(inManage('fC', (n) => n.props && n.props.title === '选择图标' && typeof n.props.onClick === 'function')[0]);
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '选择图标' && typeof n.props.onClick === 'function')[0]);
 render();
 const iconPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-icons')[0];
 const iconButtons = [];
@@ -415,7 +415,7 @@ render();
 check('新图标保存成功', folderById('fC').icon === '🚀', JSON.stringify(folderById('fC')));
 
 // 线性图标（Lucide）：分组、能选、能渲染成 svg
-click(inManage('fC', (n) => n.props && n.props.title === '选择图标' && typeof n.props.onClick === 'function')[0]);
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '选择图标' && typeof n.props.onClick === 'function')[0]);
 render();
 const svgPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-icons')[0];
 check('面板里有线性图标分组', /电商·线/.test(textOf(svgPanel)) && /新媒体·线/.test(textOf(svgPanel)), textOf(svgPanel).slice(0, 80));
@@ -433,9 +433,9 @@ check('分类行把线性图标渲染成 svg', svgRow !== undefined && (() => {
 })(), JSON.stringify(folderById('fC').icon));
 
 // merge 数据 into 论文二
-click(inManage('fB', (n) => n.props && n.props.title === '合并到' && typeof n.props.onClick === 'function')[0]);
+click(inManage('fB', (n) => n.props && n.props['data-tip'] === '合并到' && typeof n.props.onClick === 'function')[0]);
 render();
-const pickers = findAll((n) => n.type === 'select' && n.props && n.props.title === '合并到');
+const pickers = findAll((n) => n.type === 'select' && n.props && n.props['data-tip'] === '合并到');
 check('merge picker opens', pickers.length === 1, 'found=' + pickers.length);
 pickers[0].props.onChange(evt('fA'));
 render();
@@ -457,7 +457,7 @@ check('clean undo banner', findAll((n) => n.props && textOf(n) === '撤销').len
 
 // delete needs two clicks
 const before = foldersOf().length;
-const del = () => inManage('fB', (n) => n.props && (n.props.title === '删除' || n.props.title === '再点一次确认删除'))[0];
+const del = () => inManage('fB', (n) => n.props && (n.props['data-tip'] === '删除' || n.props['data-tip'] === '再点一次确认删除'))[0];
 click(del());
 render();
 check('first delete click arms', foldersOf().length === before);
@@ -521,13 +521,13 @@ check('double click resets the width', storeOf().prefs.navWidth === 224, String(
 
 check('nav item tooltip carries the full path', findAll((node) => node.props
   && String(node.props.className || '').indexOf('wm-navit') >= 0
-  && typeof node.props.title === 'string' && node.props.title.indexOf('\n') >= 0).length >= 1);
+  && typeof node.props['data-tip'] === 'string' && node.props['data-tip'].indexOf('\n') >= 0).length >= 1);
 
 // ---- 分类管理里的「查看」：跳回对话视图并展开该分类
 clickText('管理分类');
 render();
 const viewBtn = inNode(manageRow('fA'), (n) => n.props
-  && n.props.title === '查看这个分类里的对话' && typeof n.props.onClick === 'function')[0];
+  && n.props['data-tip'] === '查看这个分类里的对话' && typeof n.props.onClick === 'function')[0];
 check('管理表里有「查看」按钮', Boolean(viewBtn));
 click(viewBtn);
 render();
@@ -625,6 +625,30 @@ click(findAll((n) => n.props && String(n.props.className || '').indexOf('wm-name
 render();
 check('关掉后点对话不再动右侧栏', openedPaneTabs.length === tabsBefore2 && calls.openRightbar.length === barBefore2,
   'tabs+' + (openedPaneTabs.length - tabsBefore2) + ' bar+' + (calls.openRightbar.length - barBefore2));
+// ---- 自绘提示：出现在指针上方、跟随移动、离开就消失（原生 title 已全部移除）
+hookSlots.length = 0;
+tree = expand(React.createElement(mainReg.component, mainReg.options.inject ? mainReg.options.inject() : {}));
+const tips = () => findAll((n) => n.props && String(n.props.className || '') === 'wm-tip');
+const titledButtons = findAll((n) => n.props && n.props.type === 'button' && typeof n.props.title === 'string');
+check('按钮上不再挂原生 title（避免被鼠标挡住）', titledButtons.length === 0,
+  JSON.stringify(titledButtons.slice(0, 3).map((n) => n.props.title)));
+const upBtn = findAll((n) => n.props && n.props['data-tip'] === '上移' && typeof n.props.onClick === 'function')[0];
+check('操作按钮带了 data-tip', Boolean(upBtn));
+if (upBtn) {
+  upBtn.props.onMouseEnter({ clientX: 120, clientY: 240 });
+  render();
+  const shown = tips()[0];
+  check('悬停出现提示', Boolean(shown) && textOf(shown) === '上移', shown ? textOf(shown) : 'none');
+  check('提示定位在指针上方', Boolean(shown) && shown.props.style.left === '120px' && shown.props.style.top === '240px',
+    shown ? JSON.stringify(shown.props.style) : 'none');
+  upBtn.props.onMouseMove({ clientX: 200, clientY: 300 });
+  render();
+  check('提示跟随指针移动', tips()[0] && tips()[0].props.style.left === '200px', JSON.stringify((tips()[0] || {}).props));
+  upBtn.props.onMouseLeave();
+  render();
+  check('移开后提示消失', tips().length === 0, 'found=' + tips().length);
+}
+
 console.log('');
 console.log('passed: ' + pass + '  failed: ' + failures.length);
 for (const failure of failures) console.log('  FAIL ' + failure);

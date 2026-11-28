@@ -602,6 +602,13 @@ window.__ModuleLoader__.load({
       'font:inherit;font-size:calc(10px * var(--wm-k));line-height:1;color:var(--wm-text-dim)}',
       '.wm-swatch:hover{transform:scale(1.14)}',
       '.wm-swatch-active{box-shadow:0 0 0 2px var(--wm-accent)}',
+      // 自绘提示：固定在指针上方，永不压住鼠标
+      '.wm-tip{position:fixed;z-index:2147483000;pointer-events:none;',
+      'transform:translate(-50%,calc(-100% - calc(14px * var(--wm-k))));max-width:calc(320px * var(--wm-k));',
+      'padding:calc(5px * var(--wm-k)) calc(8px * var(--wm-k));border-radius:calc(6px * var(--wm-k));',
+      'border:.5px solid var(--wm-line-2);background:var(--dsw-alias-bg-overlay,var(--wm-surface-2));',
+      'color:var(--wm-text);font-size:calc(11px * var(--wm-k));line-height:1.45;',
+      'white-space:pre-wrap;word-break:break-word;box-shadow:0 10px 26px rgba(0,0,0,.28)}',
       '.wm-emoji-svg{color:var(--wm-text)}',
       '.wm-emoji-svg svg{width:calc(15px * var(--wm-k));height:calc(15px * var(--wm-k));display:block}',
       '.wm-svgbtn{width:calc(24px * var(--wm-k));height:calc(24px * var(--wm-k));border-radius:calc(5px * var(--wm-k));',
@@ -1040,6 +1047,8 @@ window.__ModuleLoader__.load({
       const [creating, setCreating] = React.useState(null);
       const [iconPicker, setIconPicker] = React.useState(null);
       const [colorPicker, setColorPicker] = React.useState(null);
+      // 自绘提示：固定在指针上方，pointer-events:none，不会被鼠标挡住
+      const [tip, setTip] = React.useState(null);
       const [pending, setPending] = React.useState(null);
       const [selection, setSelection] = React.useState({});
       const [focused, setFocused] = React.useState('');
@@ -1940,6 +1949,23 @@ window.__ModuleLoader__.load({
 
       const indent = (depth) => ({ paddingLeft: 8 + depth * 14 });
 
+      /** 提示的显示/隐藏：位置跟着指针，但显示在指针上方 14px。 */
+      const tipShow = (text) => (event) => {
+        if (typeof text !== 'string' || text === '') return;
+        const x = typeof event.clientX === 'number' ? event.clientX : 0;
+        const y = typeof event.clientY === 'number' ? event.clientY : 0;
+        setTip({ text, x, y });
+      };
+      const tipHide = () => setTip(null);
+      /** 给按钮用：鼠标进入/移动更新位置，离开清掉；不再用原生 title（原生提示会被指针挡住）。 */
+      const tipProps = (text) => ({
+        'data-tip': text,
+        onMouseEnter: tipShow(text),
+        onMouseMove: tipShow(text),
+        onMouseLeave: tipHide,
+        onBlur: tipHide,
+      });
+
       /** 分类行的整条底色：选了颜色就整条染色 + 左侧一条色带，标题本身不变色。 */
       const folderRowStyle = (folder, depth, focusedNow) => {
         const base = indent(depth);
@@ -2004,7 +2030,7 @@ window.__ModuleLoader__.load({
           }
           const mergeRow = merging === true ? h('select', {
             className: 'wm-select', key: 'merge', defaultValue: '',
-            title: t('merge'), 'aria-label': t('merge'),
+            ...tipProps(t('merge')), 'aria-label': t('merge'),
             onClick: (event) => event.stopPropagation(),
             onChange: (event) => {
               const value = event.target.value;
@@ -2025,7 +2051,7 @@ window.__ModuleLoader__.load({
           },
           folder.icon !== ''
             ? h('button', {
-              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', title: t('icon'),
+              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', ...tipProps(t('icon')),
               onClick: (event) => {
                 event.stopPropagation();
                 setIconPicker({ workspaceId, folderId: folder.id });
@@ -2033,7 +2059,7 @@ window.__ModuleLoader__.load({
             }, isSvgIcon(folder.icon) ? svgIcon(folder.icon.slice(SVG_ICON_PREFIX.length)) : folder.icon)
             : h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
           h('button', {
-            className: 'wm-dot', type: 'button', title: t('colorPick'),
+            className: 'wm-dot', type: 'button', ...tipProps(t('colorPick')),
             style: color === '' ? undefined : { background: color, borderColor: color },
             onClick: (event) => {
               event.stopPropagation();
@@ -2042,7 +2068,7 @@ window.__ModuleLoader__.load({
           }),
           h('button', {
             className: 'wm-name wm-name-link wm-name-folder wm-manage-name', type: 'button',
-            title: t('rename'),
+            ...tipProps(t('rename')),
             onClick: (event) => {
               event.stopPropagation();
               beginRename(workspaceId, folder);
@@ -2051,7 +2077,7 @@ window.__ModuleLoader__.load({
           folder.pinned === true ? h('span', { className: 'wm-meta' }, '📌') : null,
           h('button', {
             className: 'wm-badge wm-badge-btn', type: 'button',
-            title: t('viewHint') + ' · ' + String(row.count) + ' ' + t('countSessions'),
+            ...tipProps(t('viewHint') + ' · ' + String(row.count) + ' ' + t('countSessions')),
             onClick: (event) => {
               event.stopPropagation();
               revealFolder(workspaceId, folder.id);
@@ -2069,35 +2095,35 @@ window.__ModuleLoader__.load({
           mergeRow,
           h('span', { className: 'wm-actions wm-actions-show' },
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('viewHint'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('viewHint')),
               onClick: (event) => {
                 event.stopPropagation();
                 revealFolder(workspaceId, folder.id);
               },
             }, t('view')),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('siblingUp'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('siblingUp')),
               onClick: (event) => {
                 event.stopPropagation();
                 moveSibling(workspaceId, folder, -1);
               },
             }, '▲'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('siblingDown'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('siblingDown')),
               onClick: (event) => {
                 event.stopPropagation();
                 moveSibling(workspaceId, folder, 1);
               },
             }, '▼'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('addSub'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('addSub')),
               onClick: (event) => {
                 event.stopPropagation();
                 beginNewFolder(workspaceId, folder.id);
               },
             }, '＋'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('icon'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('icon')),
               onClick: (event) => {
                 event.stopPropagation();
                 setIconPicker({ workspaceId, folderId: folder.id });
@@ -2105,7 +2131,7 @@ window.__ModuleLoader__.load({
             }, '🎨'),
             h('button', {
               className: 'wm-ghost', type: 'button',
-              title: folder.pinned === true ? t('unpin') : t('pin'),
+              ...tipProps(folder.pinned === true ? t('unpin') : t('pin')),
               onClick: (event) => {
                 event.stopPropagation();
                 setFolderMeta(workspaceId, folder.id, { pinned: folder.pinned !== true });
@@ -2113,7 +2139,7 @@ window.__ModuleLoader__.load({
             }, folder.pinned === true ? '📌' : '📍'),
             h('button', {
               className: 'wm-ghost' + (merging === true ? ' wm-row-hit' : ''), type: 'button',
-              title: t('merge'),
+              ...tipProps(t('merge')),
               onClick: (event) => {
                 event.stopPropagation();
                 setMergeFrom(merging === true ? null : { workspaceId, folderId: folder.id });
@@ -2121,7 +2147,7 @@ window.__ModuleLoader__.load({
             }, '⤵'),
             h('button', {
               className: 'wm-ghost wm-ghost-danger', type: 'button',
-              title: isPending ? t('confirm') : t('remove'),
+              ...tipProps(isPending ? t('confirm') : t('remove')),
               onClick: (event) => {
                 event.stopPropagation();
                 deleteFolder(workspaceId, folder);
@@ -2154,7 +2180,7 @@ window.__ModuleLoader__.load({
           },
           h('button', {
             className: 'wm-chev', type: 'button',
-            title: row.expanded ? t('collapse') : t('expand'),
+            ...tipProps(row.expanded ? t('collapse') : t('expand')),
             'aria-label': row.expanded ? t('collapse') : t('expand'),
             onClick: (event) => {
               event.stopPropagation();
@@ -2163,7 +2189,7 @@ window.__ModuleLoader__.load({
           }, h(ChevronGlyph, { open: row.expanded })),
           folder.icon !== ''
             ? h('button', {
-              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', title: t('icon'),
+              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', ...tipProps(t('icon')),
               onClick: (event) => {
                 event.stopPropagation();
                 setIconPicker({ workspaceId: row.project.workspaceId, folderId: folder.id });
@@ -2171,7 +2197,7 @@ window.__ModuleLoader__.load({
             }, isSvgIcon(folder.icon) ? svgIcon(folder.icon.slice(SVG_ICON_PREFIX.length)) : folder.icon)
             : h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
           h('button', {
-            className: 'wm-dot', type: 'button', title: t('colorPick'),
+            className: 'wm-dot', type: 'button', ...tipProps(t('colorPick')),
             style: color === '' ? undefined : { background: color, borderColor: color },
             onClick: (event) => {
               event.stopPropagation();
@@ -2180,7 +2206,7 @@ window.__ModuleLoader__.load({
           }),
           h('button', {
             className: 'wm-name wm-name-folder wm-name-toggle', type: 'button',
-            title: (row.expanded ? t('collapse') : t('expand')) + ' · ' + folderNameOf(folder, t),
+            ...tipProps((row.expanded ? t('collapse') : t('expand')) + ' · ' + folderNameOf(folder, t)),
             onClick: (event) => {
               event.stopPropagation();
               toggleExpand(folder.id);
@@ -2189,7 +2215,7 @@ window.__ModuleLoader__.load({
           folder.pinned === true ? h('span', { className: 'wm-meta' }, '📌') : null,
           h('button', {
             className: 'wm-badge wm-badge-btn', type: 'button',
-            title: (row.expanded ? t('collapse') : t('expand')) + ' · ' + String(row.count) + ' ' + t('countSessions'),
+            ...tipProps((row.expanded ? t('collapse') : t('expand')) + ' · ' + String(row.count) + ' ' + t('countSessions')),
             onClick: (event) => {
               event.stopPropagation();
               toggleExpand(folder.id);
@@ -2198,35 +2224,35 @@ window.__ModuleLoader__.load({
           h('span', { className: 'wm-grow' }),
           h('span', { className: 'wm-actions' },
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('siblingUp'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('siblingUp')),
               onClick: (event) => {
                 event.stopPropagation();
                 moveSibling(row.project.workspaceId, folder, -1);
               },
             }, '▲'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('siblingDown'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('siblingDown')),
               onClick: (event) => {
                 event.stopPropagation();
                 moveSibling(row.project.workspaceId, folder, 1);
               },
             }, '▼'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('addSub'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('addSub')),
               onClick: (event) => {
                 event.stopPropagation();
                 beginNewFolder(row.project.workspaceId, folder.id);
               },
             }, '＋'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('icon'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('icon')),
               onClick: (event) => {
                 event.stopPropagation();
                 setIconPicker({ workspaceId: row.project.workspaceId, folderId: folder.id });
               },
             }, '🎨'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('rename'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('rename')),
               onClick: (event) => {
                 event.stopPropagation();
                 beginRename(row.project.workspaceId, folder);
@@ -2234,14 +2260,14 @@ window.__ModuleLoader__.load({
             }, '✎'),
             h('button', {
               className: 'wm-ghost', type: 'button',
-              title: folder.pinned === true ? t('unpin') : t('pin'),
+              ...tipProps(folder.pinned === true ? t('unpin') : t('pin')),
               onClick: (event) => {
                 event.stopPropagation();
                 setFolderMeta(row.project.workspaceId, folder.id, { pinned: folder.pinned !== true });
               },
             }, folder.pinned === true ? '📌' : '📍'),
             h('button', {
-              className: 'wm-ghost', type: 'button', title: t('newSession'),
+              className: 'wm-ghost', type: 'button', ...tipProps(t('newSession')),
               onClick: (event) => {
                 event.stopPropagation();
                 newSession(row.project.workspaceId, folder.id);
@@ -2249,7 +2275,7 @@ window.__ModuleLoader__.load({
             }, '◆'),
             h('button', {
               className: 'wm-ghost wm-ghost-danger', type: 'button',
-              title: isPending ? t('confirm') : t('remove'),
+              ...tipProps(isPending ? t('confirm') : t('remove')),
               onClick: (event) => {
                 event.stopPropagation();
                 deleteFolder(row.project.workspaceId, folder);
@@ -2262,7 +2288,7 @@ window.__ModuleLoader__.load({
           const swatches = PALETTE.map((paint, index) => h('button', {
             type: 'button', key: 'p' + index,
             className: 'wm-swatch' + (folder.color === index ? ' wm-swatch-active' : ''),
-            title: paint === '' ? t('clearColor') : paint,
+            ...tipProps(paint === '' ? t('clearColor') : paint),
             style: paint === '' ? undefined : { background: paint, borderColor: paint, color: '#fff' },
             onClick: (event) => {
               event.stopPropagation();
@@ -2287,13 +2313,13 @@ window.__ModuleLoader__.load({
           },
           h('span', { className: 'wm-iconlabel' }, t(group.labelKey)),
           h('span', { className: 'wm-icongrid' }, group.icons.map((icon) => h('button', {
-            type: 'button', key: group.key + '|' + icon, title: icon, onClick: pick(icon),
+            type: 'button', key: group.key + '|' + icon, ...tipProps(icon), onClick: pick(icon),
           }, icon)))));
           for (const group of SVG_GROUPS) {
             groups.push(h('div', { className: 'wm-iconrow', key: group.key },
               h('span', { className: 'wm-iconlabel' }, t(group.labelKey)),
               h('span', { className: 'wm-icongrid' }, group.names.map((name) => h('button', {
-                type: 'button', key: group.key + '|' + name, title: name,
+                type: 'button', key: group.key + '|' + name, ...tipProps(name),
                 className: 'wm-svgbtn' + (folder.icon === SVG_ICON_PREFIX + name ? ' wm-svgbtn-active' : ''),
                 onClick: pick(SVG_ICON_PREFIX + name),
               }, svgIcon(name))))));
@@ -2301,7 +2327,7 @@ window.__ModuleLoader__.load({
           groups.push(h('div', { className: 'wm-iconrow', key: 'clear' },
             h('span', { className: 'wm-iconlabel' }, t('clearIcon')),
             h('span', { className: 'wm-icongrid' }, h('button', {
-              type: 'button', key: 'clear', title: t('clearIcon'), onClick: pick(''),
+              type: 'button', key: 'clear', ...tipProps(t('clearIcon')), onClick: pick(''),
             }, '∅'))));
           return h('div', { className: 'wm-icons', key: row.key, style: indent(row.depth) }, groups);
         }
@@ -2426,7 +2452,7 @@ window.__ModuleLoader__.load({
         h('span', { className: 'wm-glyph' }, h(SessionGlyph, null)),
         h('button', {
           className: 'wm-name wm-name-link', type: 'button',
-          title: t('clickToOpen'),
+          ...tipProps(t('clickToOpen')),
           onClick: (event) => {
             event.stopPropagation();
             openSession(sessionId);
@@ -2451,7 +2477,7 @@ window.__ModuleLoader__.load({
         folderOptions.map((option) => h('option', { value: option.id, key: option.id }, option.label))) : null,
         h('span', { className: 'wm-actions' },
           h('button', {
-            className: 'wm-ghost', type: 'button', title: t('menu'),
+            className: 'wm-ghost', type: 'button', ...tipProps(t('menu')),
             'aria-label': t('menu'),
             onClick: (event) => {
               event.stopPropagation();
@@ -2493,7 +2519,7 @@ window.__ModuleLoader__.load({
           className: 'wm-navit' + (isActive ? ' wm-navit-active' : ''),
           type: 'button', key: 'p|' + project.workspaceId,
           // 悬停给出全名 + 磁盘路径：左栏再窄也能确认是哪个项目
-          title: navPath === '' ? navLabel : navLabel + '\n' + navPath,
+          ...tipProps(navPath === '' ? navLabel : navLabel + '\n' + navPath),
           onClick: () => setPrefs({ activeKind: 'project', activeProjectId: project.workspaceId }),
         },
         h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
@@ -2515,24 +2541,24 @@ window.__ModuleLoader__.load({
           String(project.title === undefined || project.title === '' ? t('untitledFolder') : project.title)))),
         h('button', {
           className: 'wm-panechip' + (viewKind === 'unfiled' ? ' wm-panechip-active' : ''),
-          type: 'button', title: t('unfiled'),
+          type: 'button', ...tipProps(t('unfiled')),
           onClick: () => setPrefs({ activeKind: 'unfiled' }),
         }, t('unfiled') + ' ' + looseAll.length),
         h('button', {
           className: 'wm-panechip' + (viewKind === 'archived' ? ' wm-panechip-active' : ''),
-          type: 'button', title: t('archivedView'),
+          type: 'button', ...tipProps(t('archivedView')),
           onClick: () => setPrefs({ activeKind: 'archived' }),
         }, t('archivedView') + ' ' + archivedIds.size),
         h('button', {
-          className: 'wm-panechip', type: 'button', title: t('expandAllHint'),
+          className: 'wm-panechip', type: 'button', ...tipProps(t('expandAllHint')),
           onClick: expandAllFolders,
         }, t('expandAll')),
         h('button', {
-          className: 'wm-panechip', type: 'button', title: t('collapseAllHint'),
+          className: 'wm-panechip', type: 'button', ...tipProps(t('collapseAllHint')),
           onClick: collapseAllFolders,
         }, t('collapseAll')),
         h('button', {
-          className: 'wm-panechip', type: 'button', title: t('openMain'),
+          className: 'wm-panechip', type: 'button', ...tipProps(t('openMain')),
           onClick: () => bridge.openPanel(),
         }, t('openMain'))) : null;
 
@@ -2569,7 +2595,7 @@ window.__ModuleLoader__.load({
           if (viewKind !== 'archived') {
             controls.push(h('span', { className: 'wm-grow', key: 'gap' }));
             controls.push(h('button', {
-              className: 'wm-btn wm-btn-sm', type: 'button', key: 'archive', title: t('archiveHint'),
+              className: 'wm-btn wm-btn-sm', type: 'button', key: 'archive', ...tipProps(t('archiveHint')),
               onClick: batchArchive,
             }, t('archive')));
           }
@@ -2606,7 +2632,7 @@ window.__ModuleLoader__.load({
             role: 'separator',
             'aria-orientation': 'vertical',
             'aria-label': t('splitHint'),
-            title: t('splitHint'),
+            ...tipProps(t('splitHint')),
             tabIndex: 0,
             onPointerDown: splitDown,
             onPointerMove: splitMove,
@@ -2655,16 +2681,16 @@ window.__ModuleLoader__.load({
               h('option', { value: 'title' }, t('sortTitle')),
               h('option', { value: 'created' }, t('sortCreated'))) : null,
               canEditProject && manageMode !== true ? h('button', {
-                className: 'wm-btn wm-btn-sm', type: 'button', title: t('expandAllHint'),
+                className: 'wm-btn wm-btn-sm', type: 'button', ...tipProps(t('expandAllHint')),
                 onClick: expandAllFolders,
               }, t('expandAll')) : null,
               canEditProject && manageMode !== true ? h('button', {
-                className: 'wm-btn wm-btn-sm', type: 'button', title: t('collapseAllHint'),
+                className: 'wm-btn wm-btn-sm', type: 'button', ...tipProps(t('collapseAllHint')),
                 onClick: collapseAllFolders,
               }, t('collapseAll')) : null,
               bridge.canPin === true ? h('button', {
                 className: 'wm-btn' + (prefs.autoPin !== false ? ' wm-btn-primary' : ''), type: 'button',
-                title: prefs.autoPin !== false ? t('pinOffHint') : t('pinHint'),
+                ...tipProps(prefs.autoPin !== false ? t('pinOffHint') : t('pinHint')),
                 onClick: () => {
                   const next = prefs.autoPin === false;
                   setPrefs({ autoPin: next });
@@ -2701,7 +2727,12 @@ window.__ModuleLoader__.load({
               : null,
             batchBar,
             h('div', { className: 'wm-scroll' }, rows),
-            h('p', { className: 'wm-hint' }, t('storage')))));
+            h('p', { className: 'wm-hint' }, t('storage'))),
+        tip === null ? null : h('div', {
+          className: 'wm-tip',
+          role: 'tooltip',
+          style: { left: Math.round(tip.x) + 'px', top: Math.round(tip.y) + 'px' },
+        }, tip.text)));
     }
 
     // ------------------------------------------------------------ 生命周期
