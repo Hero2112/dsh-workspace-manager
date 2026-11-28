@@ -404,9 +404,10 @@ render();
 const iconPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-icons')[0];
 const iconButtons = [];
 walk(iconPanel, (n) => { if (n.type === 'button') iconButtons.push(n); });
-check('图标数量足够多', iconButtons.length >= 100, 'found=' + iconButtons.length);
+check('图标数量足够多', iconButtons.length >= 150, 'found=' + iconButtons.length);
 check('图标按用途分组', /常用/.test(textOf(iconPanel)) && /文档/.test(textOf(iconPanel)) && /数据/.test(textOf(iconPanel)),
   textOf(iconPanel).slice(0, 40));
+check('有电商和新媒体分组', /电商/.test(textOf(iconPanel)) && /新媒体/.test(textOf(iconPanel)), textOf(iconPanel).slice(0, 60));
 const rocket = iconButtons.find((n) => textOf(n) === '🚀');
 check('新加的分类图标可用', Boolean(rocket));
 click(rocket);

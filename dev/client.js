@@ -49,6 +49,9 @@ window.__ModuleLoader__.load({
      */
     const ICON_GROUPS = [
       { key: 'common', labelKey: 'iconGroupCommon', icons: ['📁', '🗂️', '⭐', '🔥', '✅', '❗', '📍', '🧩', '⚙️', '🗓️', '💡', '🎯'] },
+      // 电商运营 / 新媒体营销是主要工作场景，放前面
+      { key: 'ecom', labelKey: 'iconGroupEcom', icons: ['🛒', '🛍️', '📦', '🏷️', '💳', '💰', '🧾', '🎁', '🚚', '📮', '🏆', '📈', '💹', '🗃️', '🧮', '🔖'] },
+      { key: 'marketing', labelKey: 'iconGroupMarketing', icons: ['📱', '🎥', '📸', '🎬', '🎙️', '✂️', '🖼️', '📣', '📢', '💬', '👍', '🧲', '🎯', '🔔', '🌐', '📇'] },
       { key: 'doc', labelKey: 'iconGroupDoc', icons: ['📄', '📝', '📑', '📚', '📖', '📓', '📒', '📔', '🗒️', '📋', '📌', '🔖', '✏️', '🖊️', '🖇️', '📎'] },
       { key: 'data', labelKey: 'iconGroupData', icons: ['📊', '📈', '📉', '🧮', '📐', '📏', '🗃️', '🗄️', '💹', '🧾', '📆', '📅', '⏱️', '🔢', '🔍', '📦'] },
       { key: 'tech', labelKey: 'iconGroupTech', icons: ['🖥️', '💻', '⌨️', '🖱️', '🛠️', '🔧', '🔨', '🧰', '🧪', '🧬', '🐍', '🌐', '🔌', '💾', '🛰️', '🤖'] },
@@ -125,6 +128,8 @@ window.__ModuleLoader__.load({
       icon: '选择图标',
       clearIcon: '清除图标',
       iconGroupCommon: '常用',
+      iconGroupEcom: '电商',
+      iconGroupMarketing: '新媒体',
       iconGroupDoc: '文档',
       iconGroupData: '数据',
       iconGroupTech: '技术',
@@ -233,6 +238,8 @@ window.__ModuleLoader__.load({
       icon: 'Pick icon',
       clearIcon: 'Clear icon',
       iconGroupCommon: 'Common',
+      iconGroupEcom: 'E-com',
+      iconGroupMarketing: 'Social',
       iconGroupDoc: 'Docs',
       iconGroupData: 'Data',
       iconGroupTech: 'Tech',
