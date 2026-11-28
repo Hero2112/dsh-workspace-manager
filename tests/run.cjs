@@ -416,7 +416,7 @@ check('pin persisted', folderById('fC').pinned === true, JSON.stringify(folderBy
 click(inManage('fC', (n) => n.props && n.props['data-tip'] === '选择图标' && typeof n.props.onClick === 'function')[0]);
 render();
 check('icon picker opens', findAll((n) => n.props && String(n.props.className || '') === 'wm-icons').length === 1);
-click(findAll((n) => n.props && n.props['data-tip'] === '📝' && typeof n.props.onClick === 'function')[0]);
+click(findAll((n) => n.props && n.props['data-tip'] === '笔记' && typeof n.props.onClick === 'function')[0]);
 render();
 check('icon persisted', folderById('fC').icon === '📝', JSON.stringify(folderById('fC')));
 
@@ -447,6 +447,31 @@ check('有电商运营和内容营销线性分组', /电商运营·线/.test(tex
 click(svgButtons[0]);
 render();
 check('线性图标落盘', folderById('fC').icon.indexOf('svg:') === 0, JSON.stringify(folderById('fC').icon));
+
+// 悬停提示要显示中文含义（不是 emoji 本身 / 英文 id / 十六进制色值）
+const tipOf = (predicate) => {
+  const btn = findAll((n) => n.props && typeof n.props.onMouseEnter === 'function' && predicate(n))[0];
+  if (!btn) return null;
+  btn.props.onMouseEnter({ clientX: 10, clientY: 20 });
+  render();
+  const shown = findAll((n) => n.props && String(n.props.className || '') === 'wm-tip')[0];
+  const text = shown ? textOf(shown) : null;
+  btn.props.onMouseLeave();
+  render();
+  return text;
+};
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '选择图标' && typeof n.props.onClick === 'function')[0]);
+render();
+const emojiTip = tipOf((n) => n.props['data-tip'] === '购物车');
+check('emoji 图标提示是中文', emojiTip === '购物车', String(emojiTip));
+const svgTip = tipOf((n) => n.props['data-tip'] === '购物车' && String(n.props.className || '').indexOf('wm-svgbtn') >= 0);
+check('线性图标提示是中文', svgTip === '购物车', String(svgTip));
+const upTip = tipOf((n) => n.props['data-tip'] === '上移');
+check('按钮提示仍是中文动作名', upTip === '上移', String(upTip));
+click(inManage('fC', (n) => n.props && n.props['data-tip'] === '选择颜色' && typeof n.props.onClick === 'function')[0]);
+render();
+const colorTip = tipOf((n) => n.props['data-tip'] === '蓝');
+check('色板提示是颜色中文名', colorTip === '蓝', String(colorTip));
 const svgRow = manageRow('fC');
 check('分类行把线性图标渲染成 svg', svgRow !== undefined && (() => {
   let found = false;

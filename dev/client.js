@@ -47,6 +47,263 @@ window.__ModuleLoader__.load({
      * 分类图标：全部是 Unicode emoji——不用打包任何图片资源，免费可商用，任何系统都能显示。
      * 按用途分组，省得一长串里找不着。
      */
+    /** 图标的中文含义：悬停提示显示汉字，不显示 emoji 本身或英文 id。 */
+    const EMOJI_LABELS = {
+      '📈': '增长',
+      '🖇️': '合作',
+      '🔧': '维修',
+      '📣': '推广',
+      '❗': '注意',
+      '🟠': '橙',
+      '✈️': '出行',
+      '🛒': '购物车',
+      '📒': '账本',
+      '🔍': '查找',
+      '✂️': '剪辑',
+      '💻': '电脑',
+      '🎯': '目标',
+      '🎥': '拍摄',
+      '🔖': '收藏',
+      '🎞️': '素材带',
+      '💼': '工作',
+      '🔢': '编号',
+      '⭐': '星标',
+      '🏢': '公司',
+      '📚': '合集',
+      '🕹️': '玩法',
+      '🌙': '夜间',
+      '📻': '电台',
+      '🎵': '音乐',
+      '🌸': '美妆',
+      '📁': '文件夹',
+      '🌞': '白天',
+      '✨': '亮点',
+      '🤝': '合作',
+      '📢': '公告',
+      '🗳️': '投票',
+      '💬': '评论私信',
+      '🏠': '门店',
+      '🗃️': '库存',
+      '🔥': '热门',
+      '🧮': '核算',
+      '🖌️': '排版',
+      '🍵': '茶歇',
+      '📐': '测算',
+      '🧰': '工具箱',
+      '🛍️': '购物袋',
+      '📍': '定位',
+      '💰': '金额',
+      '🔓': '公开',
+      '📎': '附件',
+      '🔴': '红',
+      '🎙️': '口播',
+      '🗒️': '草稿',
+      '🧑‍💼': '运营',
+      '⚡': '紧急',
+      '🏆': '榜单',
+      '📖': '说明',
+      '🌱': '新品',
+      '⏳': '等待',
+      '📄': '文档',
+      '📆': '周历',
+      '📝': '笔记',
+      '🚩': '标记',
+      '📷': '相机',
+      '🔨': '搭建',
+      '🟣': '紫',
+      '📔': '日记',
+      '🌐': '全域',
+      '🖼️': '素材',
+      '‼️': '重点',
+      '📸': '拍照',
+      '🧭': '方向',
+      '🧲': '引流',
+      '📋': '清单',
+      '⚫': '黑',
+      '🖱️': '鼠标',
+      '🔔': '提醒',
+      '🎨': '设计',
+      '📉': '下滑',
+      '🟢': '绿',
+      '🛠️': '工具',
+      '📦': '包裹',
+      '🎤': '演唱',
+      '✏️': '编辑',
+      '📓': '本子',
+      '🔒': '私密',
+      '🚀': '上新',
+      '🔵': '蓝',
+      '🧩': '拼图',
+      '📑': '目录',
+      '🐍': '脚本',
+      '⏱️': '计时',
+      '❓': '待定',
+      '🏷️': '标签',
+      '💡': '点子',
+      '📮': '发货',
+      '✅': '完成',
+      '💵': '预算',
+      '🟤': '棕',
+      '🎮': '互动',
+      '📺': '视频号',
+      '📌': '钉住',
+      '🍎': '食品',
+      '☕': '咖啡',
+      '⌨️': '键盘',
+      '🎧': '音频',
+      '🟡': '黄',
+      '🗂️': '卡片盒',
+      '🖥️': '桌面',
+      '📥': '导入',
+      '🤖': '机器人',
+      '📅': '日历',
+      '🧪': '实验',
+      '🔌': '接口',
+      '🎹': '配乐',
+      '🧬': '算法',
+      '🛰️': '同步',
+      '👍': '点赞',
+      '🗄️': '归档库',
+      '🌿': '自然',
+      '📇': '达人库',
+      '❤️': '喜欢',
+      '📏': '标准',
+      '⚪': '白',
+      '⚙️': '设置',
+      '🧾': '单据',
+      '💹': '行情',
+      '🎁': '赠品',
+      '🎬': '视频',
+      '💾': '存档',
+      '🖊️': '写作',
+      '🏦': '财务',
+      '📱': '手机端',
+      '🗓️': '日程',
+      '📤': '导出',
+      '📊': '报表',
+      '🚚': '物流',
+      '💳': '支付',
+    };
+    const SVG_ICON_LABELS = {
+      'timer': '计时',
+      'thumbs-down': '差评',
+      'lightbulb': '点子',
+      'tag': '标签',
+      'palette': '配色',
+      'package-search': '查件',
+      'truck': '物流车',
+      'file-text': '文档',
+      'box': '箱子',
+      'shopping-bag': '购物袋',
+      'banknote': '钞票',
+      'clapperboard': '场记板',
+      'scissors': '剪辑',
+      'pen-tool': '设计笔',
+      'trending-up': '上涨',
+      'star-half': '半星评分',
+      'messages-square': '会话',
+      'upload': '上传',
+      'magnet': '引流',
+      'podcast': '播客',
+      'receipt-text': '单据明细',
+      'hand-coins': '佣金',
+      'user-check': '认证用户',
+      'percent': '折扣',
+      'list-video': '播放列表',
+      'package': '包裹',
+      'calculator': '核算',
+      'shopping-basket': '购物篮',
+      'search-check': '选品',
+      'headset': '客服耳机',
+      'hash': '话题',
+      'boxes': '库存箱',
+      'bell': '提醒',
+      'image': '图片',
+      'gift': '赠品',
+      'notebook-pen': '脚本',
+      'type': '排版标题',
+      'credit-card': '支付卡',
+      'filter': '筛选',
+      'rotate-ccw': '退货',
+      'download': '下载',
+      'cast': '投屏',
+      'bot': '自动回复',
+      'bookmark': '收藏',
+      'sparkles': '亮点',
+      'clipboard-check': '核对',
+      'at-sign': '艾特',
+      'alert-circle': '注意',
+      'inbox': '私信箱',
+      'heart': '收藏喜欢',
+      'play': '播放',
+      'receipt': '小票',
+      'text-quote': '引用文案',
+      'rss': '订阅源',
+      'send': '推送',
+      'folder': '文件夹',
+      'user-plus': '涨粉',
+      'globe': '全域',
+      'megaphone': '喇叭推广',
+      'music': '音乐',
+      'radio': '电台',
+      'ticket': '优惠券',
+      'calendar': '日历',
+      'store': '店铺',
+      'shield-check': '已核验',
+      'video': '摄像机',
+      'map-pin': '区域',
+      'warehouse': '仓库',
+      'camera': '相机',
+      'layout-template': '封面模板',
+      'qr-code': '二维码',
+      'headphones': '耳机监听',
+      'badge-percent': '打折',
+      'gauge': '指标盘',
+      'check-circle': '完成',
+      'film': '胶片',
+      'shopping-cart': '购物车',
+      'users-round': '社群',
+      'calendar-days': '内容日历',
+      'layers': '层级',
+      'package-check': '签收',
+      'workflow': '流程',
+      'message-square': '评论',
+      'images': '图集',
+      'chart-pie': '占比',
+      'list-checks': '检查清单',
+      'thumbs-up': '点赞',
+      'chart-no-axes-column': '柱状对比',
+      'target': '投放目标',
+      'clock': '时钟',
+      'gallery-horizontal': '图集',
+      'handshake': '达人合作',
+      'package-x': '物流异常',
+      'star': '星标',
+      'trending-down': '掉量',
+      'share-2': '分享',
+      'life-buoy': '售后救急',
+      'trophy': '榜单奖杯',
+      'wallet': '钱包',
+      'mic': '录音',
+      'badge-check': '认证',
+      'clipboard-list': '任务清单',
+      'flame': '热门',
+      'scale': '比价',
+      'message-circle': '私信',
+      'users': '用户群',
+      'coins': '硬币',
+      'image-play': '图片播放',
+      'rocket': '上新发布',
+      'search': '搜索',
+      'folder-open': '打开文件夹',
+      'tags': '多标签',
+      'link': '链接',
+      'chart-line': '折线走势',
+      'square-play': '播放按钮',
+      'info': '说明',
+    };
+    /** 调色板中文名，和 PALETTE 一一对应（第一条是不染色）。 */
+    const PALETTE_NAMES = ['不染色', '灰', '蓝', '绿', '琥珀', '红', '紫', '粉', '红', '橙', '琥珀', '黄', '青柠', '绿', '青绿', '青', '天蓝', '蓝', '靛蓝', '紫罗兰', '品红', '玫红', '石板灰', '石灰棕', '深琥珀', '深绿', '深蓝', '深紫', '深青'];
     /**
      * 线性图标：来自 Lucide（ISC 许可，见 THIRD-PARTY-LICENSES.md），内联成 SVG，不加载外部图片。
      * folder.icon 里存 "svg:<name>"；老数据是 emoji，两种都能显示。
@@ -184,6 +441,23 @@ window.__ModuleLoader__.load({
     /** 判断一个图标值是线性图标还是 emoji。 */
     function isSvgIcon(icon) {
       return typeof icon === 'string' && icon.indexOf(SVG_ICON_PREFIX) === 0;
+    }
+
+    /** icon 值（emoji 或 svg:name）→ 中文含义；查不到就退回原值，不至于空白。 */
+    function iconLabel(icon) {
+      if (typeof icon !== 'string' || icon === '') return '';
+      if (isSvgIcon(icon)) {
+        const name = icon.slice(SVG_ICON_PREFIX.length);
+        return SVG_ICON_LABELS[name] || name;
+      }
+      return EMOJI_LABELS[icon] || icon;
+    }
+
+    /** 调色板颜色 → 中文名。 */
+    function paletteLabel(paint) {
+      if (typeof paint !== 'string' || paint === '') return '';
+      const index = PALETTE.indexOf(paint);
+      return index >= 0 && PALETTE_NAMES[index] !== undefined ? PALETTE_NAMES[index] : paint;
     }
 
     /** 把一个线性图标渲染成内联 SVG（粗细/颜色跟随文字）。 */
@@ -1960,14 +2234,20 @@ window.__ModuleLoader__.load({
         setTip({ text, x, y });
       };
       const tipHide = () => setTip(null);
-      /** 给按钮用：鼠标进入/移动更新位置，离开清掉；不再用原生 title（原生提示会被指针挡住）。 */
-      const tipProps = (text) => ({
-        'data-tip': text,
-        onMouseEnter: tipShow(text),
-        onMouseMove: tipShow(text),
-        onMouseLeave: tipHide,
-        onBlur: tipHide,
-      });
+      /**
+       * 给按钮用：鼠标进入/移动更新位置，离开清掉；不再用原生 title（原生提示会被指针挡住）。
+       * key 是给测试/调试用的固定标识，display 是真正显示的文字（不传就显示 key）。
+       */
+      const tipProps = (key, display) => {
+        const text = display === undefined ? key : display;
+        return {
+          'data-tip': key,
+          onMouseEnter: tipShow(text),
+          onMouseMove: tipShow(text),
+          onMouseLeave: tipHide,
+          onBlur: tipHide,
+        };
+      };
 
       /** 分类行的整条底色：选了颜色就整条染色 + 左侧一条色带，标题本身不变色。 */
       const folderRowStyle = (folder, depth, focusedNow) => {
@@ -2054,7 +2334,7 @@ window.__ModuleLoader__.load({
           },
           folder.icon !== ''
             ? h('button', {
-              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', ...tipProps(t('icon')),
+              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', ...tipProps(t('icon'), t('icon') + ' · ' + iconLabel(folder.icon)),
               onClick: (event) => {
                 event.stopPropagation();
                 setIconPicker({ workspaceId, folderId: folder.id });
@@ -2193,7 +2473,7 @@ window.__ModuleLoader__.load({
           }, h(ChevronGlyph, { open: row.expanded })),
           folder.icon !== ''
             ? h('button', {
-              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', ...tipProps(t('icon')),
+              className: 'wm-emoji' + (isSvgIcon(folder.icon) ? ' wm-emoji-svg' : ''), type: 'button', ...tipProps(t('icon'), t('icon') + ' · ' + iconLabel(folder.icon)),
               onClick: (event) => {
                 event.stopPropagation();
                 setIconPicker({ workspaceId: row.project.workspaceId, folderId: folder.id });
@@ -2293,7 +2573,7 @@ window.__ModuleLoader__.load({
           const swatches = PALETTE.map((paint, index) => h('button', {
             type: 'button', key: 'p' + index,
             className: 'wm-swatch' + (folder.color === index ? ' wm-swatch-active' : ''),
-            ...tipProps(paint === '' ? t('clearColor') : paint),
+            ...tipProps(paint === '' ? t('clearColor') : paletteLabel(paint)),
             style: paint === '' ? undefined : { background: paint, borderColor: paint, color: '#fff' },
             onClick: (event) => {
               event.stopPropagation();
@@ -2318,13 +2598,13 @@ window.__ModuleLoader__.load({
           },
           h('span', { className: 'wm-iconlabel' }, t(group.labelKey)),
           h('span', { className: 'wm-icongrid' }, group.icons.map((icon) => h('button', {
-            type: 'button', key: group.key + '|' + icon, ...tipProps(icon), onClick: pick(icon),
+            type: 'button', key: group.key + '|' + icon, ...tipProps(iconLabel(icon)), onClick: pick(icon),
           }, icon)))));
           for (const group of SVG_GROUPS) {
             groups.push(h('div', { className: 'wm-iconrow', key: group.key },
               h('span', { className: 'wm-iconlabel' }, t(group.labelKey)),
               h('span', { className: 'wm-icongrid' }, group.names.map((name) => h('button', {
-                type: 'button', key: group.key + '|' + name, ...tipProps(name),
+                type: 'button', key: group.key + '|' + name, ...tipProps(iconLabel(SVG_ICON_PREFIX + name)),
                 className: 'wm-svgbtn' + (folder.icon === SVG_ICON_PREFIX + name ? ' wm-svgbtn-active' : ''),
                 onClick: pick(SVG_ICON_PREFIX + name),
               }, svgIcon(name))))));
