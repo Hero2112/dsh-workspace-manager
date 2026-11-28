@@ -35,7 +35,14 @@ window.__ModuleLoader__.load({
     const UNCATEGORIZED = '__none__';
 
     /** 用户选的颜色只是装饰，所以直接写字面值，不套主题 token。 */
-    const PALETTE = ['', '#8A8F98', '#1F6FEB', '#2E9E5B', '#D99A2B', '#D9534F', '#8B5CF6', '#E05A9E'];
+    // 调色板：索引 0 = 不染色；1-7 是最早那 7 个（老数据的索引不能变），后面是 1.6.5 追加的 21 个。
+    const PALETTE = [
+      '',
+      '#8A8F98', '#1F6FEB', '#2E9E5B', '#D99A2B', '#D9534F', '#8B5CF6', '#E05A9E',
+      '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E', '#14B8A6',
+      '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#A855F7', '#D946EF', '#EC4899',
+      '#64748B', '#78716C', '#B45309', '#15803D', '#1D4ED8', '#7E22CE', '#0F766E',
+    ];
     /**
      * 分类图标：全部是 Unicode emoji——不用打包任何图片资源，免费可商用，任何系统都能显示。
      * 按用途分组，省得一长串里找不着。
@@ -418,9 +425,10 @@ window.__ModuleLoader__.load({
       'color:var(--wm-text-dim);background:var(--wm-hover);border:.5px solid var(--wm-line)}',
       '.wm-editor{display:flex;align-items:center;gap:calc(6px * var(--wm-k));',
       'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(7px * var(--wm-k))}',
-      '.wm-colors{display:flex;align-items:center;gap:calc(5px * var(--wm-k));flex-wrap:wrap;',
+      '.wm-colors{display:flex;align-items:flex-start;gap:calc(6px * var(--wm-k));flex-wrap:wrap;',
       'padding:calc(4px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k))}',
-      '.wm-colorlabel{flex:none;font-size:calc(10px * var(--wm-k));color:var(--wm-text-dim)}',
+      '.wm-colorlabel{flex:none;font-size:calc(10px * var(--wm-k));color:var(--wm-text-dim);padding-top:calc(4px * var(--wm-k))}',
+      '.wm-colorgrid{display:grid;grid-template-columns:repeat(7, auto);gap:calc(4px * var(--wm-k))}',
       '.wm-swatch{width:calc(18px * var(--wm-k));height:calc(18px * var(--wm-k));border-radius:50%;',
       'border:.5px solid var(--wm-line-2);background:var(--wm-surface);cursor:pointer;padding:0;',
       'font:inherit;font-size:calc(10px * var(--wm-k));line-height:1;color:var(--wm-text-dim)}',
@@ -2087,7 +2095,8 @@ window.__ModuleLoader__.load({
             },
           }, paint === '' ? '∅' : ''));
           return h('div', { className: 'wm-colors', key: row.key, style: indent(row.depth) },
-            h('span', { className: 'wm-colorlabel' }, t('colorPick')), swatches);
+            h('span', { className: 'wm-colorlabel' }, t('colorPick')),
+            h('span', { className: 'wm-colorgrid' }, swatches));
         }
 
         if (row.kind === 'icons') {

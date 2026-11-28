@@ -312,7 +312,7 @@ render();
 const swatchPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-colors')[0];
 check('点圆点打开色板', Boolean(swatchPanel));
 const swatches = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-swatch') >= 0);
-check('色板有 8 个选项（7 色 + 清除）', swatches.length === 8, 'found=' + swatches.length);
+check('色板有 29 个选项（28 色 + 清除）', swatches.length === 29, 'found=' + swatches.length);
 click(swatches[3]);
 render();
 check('选中颜色落盘', folderById('fA').color === 3, JSON.stringify(folderById('fA')));
