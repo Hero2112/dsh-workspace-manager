@@ -113,6 +113,8 @@ window.__ModuleLoader__.load({
       pin: '置顶',
       unpin: '取消置顶',
       color: '切换颜色',
+      colorPick: '选择颜色',
+      clearColor: '清除颜色',
       icon: '选择图标',
       clearIcon: '清除图标',
       iconGroupCommon: '常用',
@@ -219,6 +221,8 @@ window.__ModuleLoader__.load({
       pin: 'Pin to top',
       unpin: 'Unpin',
       color: 'Change color',
+      colorPick: 'Pick a colour',
+      clearColor: 'Clear colour',
       icon: 'Pick icon',
       clearIcon: 'Clear icon',
       iconGroupCommon: 'Common',
@@ -414,6 +418,14 @@ window.__ModuleLoader__.load({
       'color:var(--wm-text-dim);background:var(--wm-hover);border:.5px solid var(--wm-line)}',
       '.wm-editor{display:flex;align-items:center;gap:calc(6px * var(--wm-k));',
       'padding:calc(3px * var(--wm-k)) calc(8px * var(--wm-k)) calc(7px * var(--wm-k))}',
+      '.wm-colors{display:flex;align-items:center;gap:calc(5px * var(--wm-k));flex-wrap:wrap;',
+      'padding:calc(4px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k))}',
+      '.wm-colorlabel{flex:none;font-size:calc(10px * var(--wm-k));color:var(--wm-text-dim)}',
+      '.wm-swatch{width:calc(18px * var(--wm-k));height:calc(18px * var(--wm-k));border-radius:50%;',
+      'border:.5px solid var(--wm-line-2);background:var(--wm-surface);cursor:pointer;padding:0;',
+      'font:inherit;font-size:calc(10px * var(--wm-k));line-height:1;color:var(--wm-text-dim)}',
+      '.wm-swatch:hover{transform:scale(1.14)}',
+      '.wm-swatch-active{box-shadow:0 0 0 2px var(--wm-accent)}',
       '.wm-icons{display:flex;flex-direction:column;gap:calc(3px * var(--wm-k));flex:none;',
       'padding:calc(6px * var(--wm-k)) calc(8px * var(--wm-k)) calc(8px * var(--wm-k));',
       'max-height:calc(230px * var(--wm-k));overflow:auto}',
@@ -843,6 +855,7 @@ window.__ModuleLoader__.load({
       const [editor, setEditor] = React.useState(null);
       const [creating, setCreating] = React.useState(null);
       const [iconPicker, setIconPicker] = React.useState(null);
+      const [colorPicker, setColorPicker] = React.useState(null);
       const [pending, setPending] = React.useState(null);
       const [selection, setSelection] = React.useState({});
       const [focused, setFocused] = React.useState('');
@@ -1463,6 +1476,10 @@ window.__ModuleLoader__.load({
           && iconPicker.workspaceId === project.workspaceId && iconPicker.folderId === folder.id) {
           rowList.push({ kind: 'icons', key: 'i|' + folder.id, depth: depth + 1, project, folder });
         }
+        if (colorPicker !== null && colorPicker !== undefined
+          && colorPicker.workspaceId === project.workspaceId && colorPicker.folderId === folder.id) {
+          rowList.push({ kind: 'colors', key: 'c|' + folder.id, depth: depth + 1, project, folder });
+        }
         if (editor !== null && editor !== undefined
           && editor.workspaceId === project.workspaceId && editor.folderId === folder.id) {
           rowList.push({ kind: 'editor', key: 'e|rename|' + folder.id, depth: depth + 1, project, mode: 'rename' });
@@ -1505,6 +1522,13 @@ window.__ModuleLoader__.load({
                 && iconPicker.workspaceId === activeProject.workspaceId && iconPicker.folderId === folder.id) {
                 rowList.push({
                   kind: 'icons', key: 'i|' + folder.id, depth: entry.depth,
+                  project: activeProject, folder,
+                });
+              }
+              if (colorPicker !== null && colorPicker !== undefined
+                && colorPicker.workspaceId === activeProject.workspaceId && colorPicker.folderId === folder.id) {
+                rowList.push({
+                  kind: 'colors', key: 'c|' + folder.id, depth: entry.depth,
                   project: activeProject, folder,
                 });
               }
@@ -1732,6 +1756,19 @@ window.__ModuleLoader__.load({
 
       const indent = (depth) => ({ paddingLeft: 8 + depth * 14 });
 
+      /** 分类行的整条底色：选了颜色就整条染色 + 左侧一条色带，标题本身不变色。 */
+      const folderRowStyle = (folder, depth, focusedNow) => {
+        const base = indent(depth);
+        const paint = PALETTE[folder.color];
+        if (paint === '' || paint === undefined) return base;
+        const shadows = ['inset ' + Math.round(3 * scaleK) + 'px 0 0 ' + paint];
+        if (focusedNow === true) shadows.push('inset 0 0 0 1px var(--wm-accent)');
+        return Object.assign({}, base, {
+          background: 'color-mix(in srgb, ' + paint + ' 18%, transparent)',
+          boxShadow: shadows.join(','),
+        });
+      };
+
       const renderRow = (row, index) => {
         if (row.kind === 'empty') {
           return h('div', { className: 'wm-empty', key: row.key },
@@ -1799,7 +1836,7 @@ window.__ModuleLoader__.load({
             className: 'wm-row' + (index > 0 ? ' wm-row-sep' : '')
               + (focused === row.key ? ' wm-row-focus' : ''),
             key: row.key,
-            style: indent(row.depth),
+            style: folderRowStyle(folder, row.depth, focused === row.key),
             onClick: () => setFocused(row.key),
           },
           folder.icon !== ''
@@ -1812,11 +1849,11 @@ window.__ModuleLoader__.load({
             }, folder.icon)
             : h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
           h('button', {
-            className: 'wm-dot', type: 'button', title: t('color'),
+            className: 'wm-dot', type: 'button', title: t('colorPick'),
             style: color === '' ? undefined : { background: color, borderColor: color },
             onClick: (event) => {
               event.stopPropagation();
-              setFolderMeta(workspaceId, folder.id, { color: (folder.color + 1) % PALETTE.length });
+              setColorPicker({ workspaceId, folderId: folder.id });
             },
           }),
           h('button', {
@@ -1918,7 +1955,7 @@ window.__ModuleLoader__.load({
               + (focused === row.key ? ' wm-row-focus' : ''),
             key: row.key,
             'data-nav-key': row.key,
-            style: indent(row.depth),
+            style: folderRowStyle(folder, row.depth, focused === row.key),
             draggable: true,
             onDragStart: (event) => startDrag(event, 'folder|' + row.project.workspaceId + '|' + folder.id),
             onDragEnd: endDrag,
@@ -1950,11 +1987,11 @@ window.__ModuleLoader__.load({
             }, folder.icon)
             : h('span', { className: 'wm-glyph' }, h(FolderGlyph, null)),
           h('button', {
-            className: 'wm-dot', type: 'button', title: t('color'),
+            className: 'wm-dot', type: 'button', title: t('colorPick'),
             style: color === '' ? undefined : { background: color, borderColor: color },
             onClick: (event) => {
               event.stopPropagation();
-              setFolderMeta(row.project.workspaceId, folder.id, { color: (folder.color + 1) % PALETTE.length });
+              setColorPicker({ workspaceId: row.project.workspaceId, folderId: folder.id });
             },
           }),
           h('button', {
@@ -2034,6 +2071,23 @@ window.__ModuleLoader__.load({
                 deleteFolder(row.project.workspaceId, folder);
               },
             }, isPending ? '!' : '×')));
+        }
+
+        if (row.kind === 'colors') {
+          const folder = row.folder;
+          const swatches = PALETTE.map((paint, index) => h('button', {
+            type: 'button', key: 'p' + index,
+            className: 'wm-swatch' + (folder.color === index ? ' wm-swatch-active' : ''),
+            title: paint === '' ? t('clearColor') : paint,
+            style: paint === '' ? undefined : { background: paint, borderColor: paint, color: '#fff' },
+            onClick: (event) => {
+              event.stopPropagation();
+              setFolderMeta(row.project.workspaceId, folder.id, { color: index });
+              setColorPicker(null);
+            },
+          }, paint === '' ? '∅' : ''));
+          return h('div', { className: 'wm-colors', key: row.key, style: indent(row.depth) },
+            h('span', { className: 'wm-colorlabel' }, t('colorPick')), swatches);
         }
 
         if (row.kind === 'icons') {

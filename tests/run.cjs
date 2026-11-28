@@ -303,6 +303,32 @@ render();
 check('全部展开后对话回来了', sessionRowsOf('开题报告').length === 1 && sessionRowsOf('数据分析').length === 1,
   JSON.stringify(rowsNow().map(textOf)));
 
+// 颜色标记：点圆点出色板，选颜色后整条变色
+const dotOf = (id) => inNode(folderRowOf(id), (n) => n.props
+  && String(n.props.className || '') === 'wm-dot')[0];
+check('分类行有颜色圆点', Boolean(dotOf('fA')));
+click(dotOf('fA'));
+render();
+const swatchPanel = findAll((n) => n.props && String(n.props.className || '') === 'wm-colors')[0];
+check('点圆点打开色板', Boolean(swatchPanel));
+const swatches = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-swatch') >= 0);
+check('色板有 8 个选项（7 色 + 清除）', swatches.length === 8, 'found=' + swatches.length);
+click(swatches[3]);
+render();
+check('选中颜色落盘', folderById('fA').color === 3, JSON.stringify(folderById('fA')));
+const paintedRow = folderRowOf('fA');
+check('整个分类条被染色', String((paintedRow.props.style || {}).background || '').indexOf('color-mix') >= 0
+  && String((paintedRow.props.style || {}).boxShadow || '').indexOf('#') >= 0,
+  JSON.stringify(paintedRow.props.style));
+click(dotOf('fA'));
+render();
+const swatches2 = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-swatch') >= 0);
+click(swatches2[0]);
+render();
+check('选 ∅ 清除颜色', folderById('fA').color === 0, JSON.stringify(folderById('fA')));
+check('清除后行底色回到默认', !String((folderRowOf('fA').props.style || {}).background || '').includes('color-mix'),
+  JSON.stringify(folderRowOf('fA').props.style));
+
 // 分类之间的分隔线：组头带 wm-row-sep（第一行除外），分类行带 wm-row-folder
 const classOf = (node) => String((node.props || {}).className || '');
 const sepRows = () => findAll((node) => classOf(node).indexOf('wm-row-sep') >= 0);
