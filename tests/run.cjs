@@ -338,6 +338,28 @@ check('分类之间画了分隔线', sepRows().length >= 2, 'found=' + sepRows()
 check('第一行不画分隔线', classOf(rowsNow()[0]).indexOf('wm-row-sep') < 0, classOf(rowsNow()[0]));
 check('分隔线只在分类行上', sepRows().every((node) => classOf(node).indexOf('wm-row-folder') >= 0));
 
+// 动作组：常用在前、删除在最后并和它们隔开
+const rowActions = (id) => {
+  const row = folderRowOf(id);
+  const group = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-actions') >= 0
+    && textOf(n).indexOf('▲') >= 0)[0];
+  return { row, group };
+};
+const firstGroup = findAll((n) => n.props && String(n.props.className || '').indexOf('wm-actions') >= 0
+  && textOf(n).indexOf('▲') >= 0)[0];
+check('分类行有动作组', Boolean(firstGroup));
+if (firstGroup) {
+  const kids = firstGroup.children.filter((child) => child && child.props);
+  const labels = kids.map((child) => textOf(child));
+  const dangerIndex = kids.findIndex((child) => classOf(child).indexOf('wm-ghost-danger') >= 0);
+  const sepIndex = kids.findIndex((child) => classOf(child).indexOf('wm-actsep') >= 0);
+  const addIndex = labels.findIndex((label) => label.indexOf('＋') >= 0);
+  check('删除按钮在动作组最后', dangerIndex === kids.length - 1, JSON.stringify(labels));
+  check('新建/常用按钮在删除之前', addIndex >= 0 && addIndex < dangerIndex, JSON.stringify(labels));
+  check('删除按钮和常用按钮之间有分隔条', sepIndex >= 0 && sepIndex < dangerIndex, JSON.stringify(labels));
+  check('删除按钮常态就是危险色', classOf(kids[dangerIndex]).indexOf('wm-ghost-danger') >= 0);
+}
+
 clickText('管理分类');
 render();
 check('manage preference stored', storeOf().prefs.manage === true);

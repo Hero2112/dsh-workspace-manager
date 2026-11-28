@@ -581,7 +581,10 @@ window.__ModuleLoader__.load({
       'min-width:calc(21px * var(--wm-k));padding:0 calc(4px * var(--wm-k));border-radius:calc(4px * var(--wm-k));',
       'border:0;background:transparent;cursor:pointer;color:var(--wm-text-dim);font:inherit;font-size:calc(11px * var(--wm-k))}',
       '.wm-ghost:hover{background:var(--wm-hover);color:var(--wm-text)}',
-      '.wm-ghost-danger:hover{color:var(--wm-danger)}',
+      '.wm-ghost-danger{color:var(--wm-danger)}',
+      '.wm-ghost-danger:hover{background:var(--wm-danger-soft);color:var(--wm-danger-text)}',
+      '.wm-actsep{flex:none;width:1px;align-self:stretch;background:var(--wm-line);',
+      'margin:calc(2px * var(--wm-k)) calc(4px * var(--wm-k))}',
       '.wm-select{flex:none;height:calc(22px * var(--wm-k));max-width:calc(132px * var(--wm-k));',
       'border-radius:calc(5px * var(--wm-k));padding:0 calc(3px * var(--wm-k));',
       'border:.5px solid var(--wm-line-2);background:var(--wm-surface);',
@@ -2137,6 +2140,7 @@ window.__ModuleLoader__.load({
                 setFolderMeta(workspaceId, folder.id, { pinned: folder.pinned !== true });
               },
             }, folder.pinned === true ? '📌' : '📍'),
+            h('span', { className: 'wm-actsep' }),
             h('button', {
               className: 'wm-ghost' + (merging === true ? ' wm-row-hit' : ''), type: 'button',
               ...tipProps(t('merge')),
@@ -2273,6 +2277,7 @@ window.__ModuleLoader__.load({
                 newSession(row.project.workspaceId, folder.id);
               },
             }, '◆'),
+            h('span', { className: 'wm-actsep' }),
             h('button', {
               className: 'wm-ghost wm-ghost-danger', type: 'button',
               ...tipProps(isPending ? t('confirm') : t('remove')),
@@ -2594,6 +2599,8 @@ window.__ModuleLoader__.load({
           }, t('clearSelection')));
           if (viewKind !== 'archived') {
             controls.push(h('span', { className: 'wm-grow', key: 'gap' }));
+            // 归档是"移出列表"的破坏性动作，和上面的操作隔开，避免顺手点到
+            controls.push(h('span', { className: 'wm-actsep', key: 'gap-sep' }));
             controls.push(h('button', {
               className: 'wm-btn wm-btn-sm', type: 'button', key: 'archive', ...tipProps(t('archiveHint')),
               onClick: batchArchive,

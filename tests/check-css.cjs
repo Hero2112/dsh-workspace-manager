@@ -24,7 +24,7 @@ const cssText = block
 
 const scaled = cssText.replace(/calc\([0-9.]+px \* var\(--wm-k\)\)/g, '');
 // 线条粗细与拖拽热区故意保持固定像素（缩放它们只会让边框变糊、热区变怪）
-const ALLOWED = [/^outline/, /^box-shadow/, /^border/, /^width:6px/];
+const ALLOWED = [/^outline/, /^box-shadow/, /^border/, /^width:6px/, /^width:1px/];
 const leftovers = [];
 const re = /[^;{]*?[0-9.]+px[^;}]*/g;
 let match;
